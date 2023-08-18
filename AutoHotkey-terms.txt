@@ -17,15 +17,12 @@ ACTIVEX
 actuals
 ADDC
 addc
-addessing
 ADDSTRING
 ADDTOOL
 ADJUSTRECT
 Advapi
 aeiou
 afxres
-agained
-aguments
 AHKAPI
 AHKCP
 ahkdll
@@ -39,7 +36,7 @@ ALLEVENTS
 allocstack
 ALLOWMULTISELECT
 ALLOWUNDO
-alreadyfound
+AlreadyFound
 ALTBEHAVIOR
 altdown
 ALTDOWN
@@ -77,7 +74,6 @@ aresult
 ARGMAP
 argt
 argtype
-arguement
 argw
 arrowkeys
 ARROWKEYS
@@ -109,7 +105,6 @@ AUTOHOTKEY
 AUTOHOTKEYSC
 AUTOHSCROLL
 autoit
-automake
 Automake
 AUTORADIOBUTTON
 autoreplace
