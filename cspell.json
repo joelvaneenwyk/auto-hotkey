@@ -1,11 +1,28 @@
 {
     "version": "0.2",
-    "ignorePaths": [],
-    "dictionaryDefinitions": [],
-    "dictionaries": [],
-    "words": [
-        "LPTSTR"
+    "language": "en",
+    "caseSensitive": false,
+    "ignorePaths": [
+        "bin/",
+        "bin_debug/",
+        "temp/",
+        "*.svg",
+        "*.pdb",
+        "*.obj"
     ],
+    "dictionaryDefinitions": [
+        {
+            "name": "ahk",
+            "path": "./AutoHotkey-terms.txt"
+        }
+    ],
+    "dictionaries": [
+        "en_US",
+        "cpp",
+        "softwareTerms",
+        "ahk"
+    ],
+    "words": [],
     "ignoreWords": [],
     "import": []
 }
