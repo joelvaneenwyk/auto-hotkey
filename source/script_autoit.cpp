@@ -26,6 +26,7 @@
 #include "application.h" // For SLEEP_WITHOUT_INTERRUPTION and MsgSleep().
 #include "script_func_impl.h"
 #include "abi.h"
+#include <Psapi.h>
 
 
 ResultType Script::DoRunAs(LPTSTR aCommandLine, LPCTSTR aWorkingDir, bool aDisplayErrors, WORD aShowWindow
@@ -961,17 +962,19 @@ bif_impl FResult Download(StrArg aURL, StrArg aFilespec)
 	HINTERNET hFile = InternetOpenUrl(hInet, aURL, NULL, 0, flags_for_open_url, 0);
 	if (!hFile)
 	{
+		DWORD last_error = GetLastError(); // Save this before calling InternetCloseHandle, otherwise it is set to 0.
 		InternetCloseHandle(hInet);
-		return FR_E_WIN32;
+		return FR_E_WIN32(last_error);
 	}
 
 	// Open our output file (overwrite if necessary)
 	auto hOut = CreateFile(aFilespec, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
 	if (hOut == INVALID_HANDLE_VALUE)
 	{
+		DWORD last_error = GetLastError();
 		InternetCloseHandle(hFile);
 		InternetCloseHandle(hInet);
-		return FR_E_WIN32;
+		return FR_E_WIN32(last_error);
 	}
 
 	BYTE bufData[1024 * 1]; // v1.0.44.11: Reduced from 8 KB to alleviate GUI window lag during Download.  Testing shows this reduction doesn't affect performance on high-speed downloads (in fact, downloads are slightly faster; I tested two sites, one at 184 KB/s and the other at 380 KB/s).  It might affect slow downloads, but that seems less likely so wasn't tested.
@@ -1264,13 +1267,31 @@ bif_impl FResult FileCreateShortcut(StrArg aTargetFile, StrArg aShortcutFile, op
 			psl->SetIconLocation(aIconFile.value(), icon_index - (icon_index > 0 ? 1 : 0)); // Convert 1-based index to 0-based, but leave negative resource IDs as-is.
 		if (aHotkey.has_value())
 		{
+			WORD mods = 0;
+			LPCTSTR cp = aHotkey.value();
+			for (;; ++cp)
+			{
+				if (!*cp || !cp[1]) // The last char is never a modifier.
+					break;
+				else if (*cp == '^')
+					mods |= HOTKEYF_CONTROL;
+				else if (*cp == '!')
+					mods |= HOTKEYF_ALT;
+				else if (*cp == '+')
+					mods |= HOTKEYF_SHIFT;
+				else
+					break;
+			}
+
+			// For backwards compatibility: if modifiers omitted, assume CTRL+ALT.
+			if (!mods)
+				mods = HOTKEYF_CONTROL | HOTKEYF_ALT;
+
 			// If badly formatted, it's not a critical error, just continue.
-			// Currently, only shortcuts with a CTRL+ALT are supported.
-			// AutoIt3 note: Make sure that CTRL+ALT is selected (otherwise invalid)
-			vk_type vk = TextToVK(aHotkey.value());
+			vk_type vk = TextToVK(cp);
 			if (vk)
 				// Vk in low 8 bits, mods in high 8:
-				psl->SetHotkey(   (WORD)vk | ((WORD)(HOTKEYF_CONTROL | HOTKEYF_ALT) << 8)   );
+				psl->SetHotkey( (WORD)vk | (mods << 8) );
 		}
 		if (aRunState.has_value())
 			psl->SetShowCmd(*aRunState); // No validation is done since there's a chance other numbers might be valid now or in the future.
@@ -1893,7 +1914,7 @@ void DoIncrementalMouseMove(int aX1, int aY1, int aX2, int aY2, int aSpeed)
 // PROCESS ROUTINES
 ////////////////////
 
-DWORD ProcessExist(LPCTSTR aProcess, bool aGetParent)
+DWORD ProcessExist(LPCTSTR aProcess, bool aGetParent, bool aVerifyPID)
 {
 	// Determine the PID if aProcess is a pure, non-negative integer (any negative number
 	// is more likely to be the name of a process [with a leading dash], rather than the PID).
@@ -1927,6 +1948,14 @@ DWORD ProcessExist(LPCTSTR aProcess, bool aGetParent)
 		// case of a process with a name composed of digits and no extension (verified possible).
 		// If ERROR_ACCESS_DENIED was returned, we can't rule out the false-positive cases described
 		// above without doing a thorough enumeration of processes, so continue in that case as well.
+		if (!aVerifyPID && GetLastError() != ERROR_INVALID_PARAMETER && !(specified_pid & 3))
+			// Caller doesn't strictly need a result of "no such process" if the process apparently
+			// exists but can't be opened, so we return early under these specific conditions.
+			// This speeds up ProcessGetPath(PID) when PID identifies a protected system process,
+			// without affecting error detection significantly.
+			return specified_pid;
+		// (specified_pid & 3) almost certainly means an invalid PID, but since that's not documented,
+		// do a thorough check before returning 0 in case there ever is a valid PID like that.
 	}
 
 	PROCESSENTRY32 proc;

@@ -36,6 +36,7 @@ extern HWND g_hWnd;  // The main window
 extern HWND g_hWndEdit;  // The edit window, child of main.
 extern HFONT g_hFontEdit;
 extern HACCEL g_hAccelTable; // Accelerator table for main menu shortcut keys.
+extern MSG *g_CalledByIsDialogMessageOrDispatch; // Helps avoid launching a monitor function twice for the same message.
 
 typedef int (WINAPI *StrCmpLogicalW_type)(LPCWSTR, LPCWSTR);
 extern StrCmpLogicalW_type g_StrCmpLogicalW;
@@ -46,6 +47,8 @@ extern modLR_type g_modifiersLR_logical_non_ignored;
 extern modLR_type g_modifiersLR_physical;  // Same as above except it's which modifiers are PHYSICALLY down.
 extern modLR_type g_modifiersLR_numpad_mask;  // Shift keys temporarily released by Numpad.
 extern modLR_type g_modifiersLR_ctrlaltdel_mask; // For excluding AltGr from Ctrl+Alt+Del handling.
+extern modLR_type g_modifiersLR_last_pressed;
+extern DWORD g_modifiersLR_last_pressed_time;
 
 extern key_type *pPrefixKey;
 

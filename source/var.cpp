@@ -188,6 +188,13 @@ IObject *Var::GetRef()
 			return mObject;
 		}
 		target_var = mAliasFor;
+		// It is also possible for a non-object alias to point to an object alias if the reference operator
+		// is applied to target_var itself or some other alias after this var became an alias of target_var.
+		if (target_var->mType == VAR_ALIAS && (target_var->mAttrib & VAR_ATTRIB_IS_OBJECT))
+		{
+			target_var->mObject->AddRef();
+			return target_var->mObject;
+		}
 	}
 	auto ref = new VarRef();
 	if (!target_var->MoveToNewFreeVar(*ref))
@@ -1248,8 +1255,7 @@ ResultType Var::ValidateName(LPCTSTR aName, int aDisplayError)
 	// such as for "and := 1" vs. "(and := 1)", though a different error message is given.
 	if (   Script::ConvertActionType(aName)
 		|| Script::ConvertWordOperator(aName, _tcslen(aName))
-		|| !_tcsicmp(aName, _T("True")) || !_tcsicmp(aName, _T("False"))
-		|| !_tcsicmp(aName, _T("local")) || !_tcsicmp(aName, _T("global")) || !_tcsicmp(aName, _T("static")))
+		|| !_tcsicmp(aName, _T("True")) || !_tcsicmp(aName, _T("False")) || !_tcsicmp(aName, _T("Throw"))   )
 	{
 		return DisplayNameError(_T("The following reserved word must not be used as a %s name:\n\"%-1.300s\""), aDisplayError, aName);
 	}

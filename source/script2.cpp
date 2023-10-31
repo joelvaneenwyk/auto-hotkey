@@ -142,8 +142,8 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPar
 
 	// See GuiWindowProc() for details about this first section:
 	LRESULT msg_reply;
-	if (g->CalledByIsDialogMessageOrDispatch && g->CalledByIsDialogMessageOrDispatchMsg == iMsg)
-		g->CalledByIsDialogMessageOrDispatch = false; // Suppress this one message, not any other messages that could be sent due to recursion.
+	if (g_CalledByIsDialogMessageOrDispatch && g_CalledByIsDialogMessageOrDispatch->message == iMsg)
+		g_CalledByIsDialogMessageOrDispatch = nullptr; // Suppress this one message, not any other messages that could be sent due to recursion.
 	else if (g_MsgMonitor.Count() && MsgMonitor(hWnd, iMsg, wParam, lParam, NULL, msg_reply))
 		return msg_reply; // MsgMonitor has returned "true", indicating that this message should be omitted from further processing.
 
@@ -942,42 +942,6 @@ LPTSTR Script::DefaultDialogTitle()
 	// If available, the script's filename seems a much better title than the program name
 	// in case the user has more than one script running:
 	return (mFileName && *mFileName) ? mFileName : T_AHK_NAME_VERSION;
-}
-
-UserFunc* Script::CreateHotFunc()
-{
-	// Should only be called during load time.
-	// Creates a new function for hotkeys and hotstrings.
-	// Caller should abort loading if this function returns nullptr.
-	
-	if (mUnusedHotFunc)
-	{
-		auto tmp = mLastHotFunc = g->CurrentFunc = mUnusedHotFunc;
-		mUnusedHotFunc = nullptr;
-		mHotFuncs.mCount++;			// DefineFunc "removed" this func previously.
-		ASSERT(mHotFuncs.mItem[mHotFuncs.mCount - 1] == tmp);
-		return tmp;
-	}
-	
-	static LPCTSTR sName = _T("<Hotkey>");
-	auto func = new UserFunc(sName);
-	
-	g->CurrentFunc = func; // Must do this before calling AddVar
-
-	// Add one parameter to hold the name of the hotkey/hotstring when triggered:
-	func->mParam = SimpleHeap::Alloc<FuncParam>();
-	if ( !(func->mParam[0].var = AddVar(_T("ThisHotkey"), 10, &func->mVars, 0, VAR_DECLARE_LOCAL | VAR_LOCAL_FUNCPARAM)) )
-		return nullptr;
-
-	func->mParam[0].default_type = PARAM_DEFAULT_NONE;
-	func->mParam[0].is_byref = false;
-	func->mParamCount = 1;
-	func->mMinParams = 1;
-	func->mIsFuncExpression = false;
-	
-	mLastHotFunc = func;
-	mHotFuncs.Insert(func, mHotFuncs.mCount);
-	return func;
 }
 
 
@@ -2880,6 +2844,15 @@ BOOL MsgMonitorList::IsMonitoring(UINT aMsg, UCHAR aMsgType)
 }
 
 
+BOOL MsgMonitorList::IsMonitoringGuiMsg()
+{
+	for (int i = 0; i < mCount; ++i)
+		if (mMonitor[i].msg_type == GUI_EVENTKIND_MESSAGE)
+			return TRUE;
+	return FALSE;
+}
+
+
 BOOL MsgMonitorList::IsRunning(UINT aMsg, UCHAR aMsgType)
 // Returns true if there are any monitors for a message currently executing.
 {
@@ -3183,8 +3156,32 @@ void Object::Error__New(ResultToken &aResultToken, int aID, int aFlags, ExprToke
 	SetOwnProp(_T("Stack"), _T("")); // Avoid "unknown property" in compiled scripts.
 #else
 	DbgStack::Entry *stack_top = g_Debugger.mStack.mTop - 1;
-	if (stack_top->type == DbgStack::SE_BIF && _tcsicmp(what, stack_top->func->mName))
-		--stack_top;
+	// I think this was originally intended to omit Exception(); doesn't seem to be needed anymore?
+	//if (stack_top->type == DbgStack::SE_BIF && _tcsicmp(what, stack_top->func->mName))
+	//	--stack_top;
+	if (g_script.mNewRuntimeException != this)
+	{
+		// This Error is likely being constructed by the script with a call like Error(),
+		// but there may be additional calls to __new.  Find the stack entry corresponding
+		// to the initial call, so we have a predictable starting point for -What values
+		// and a good default Line.
+		for (auto se = stack_top; se >= g_Debugger.mStack.mBottom; --se)
+		{
+			if (se->type == DbgStack::SE_BIF && se->func == Object::sObjectCall)
+			{
+				line = se->line;
+				stack_top = se - 1;
+				break;
+			}
+			// In order to avoid omitting any stack frames that aren't actually related to the
+			// construction of this Error object, omit only frames where this == script's this.
+			// Multiple instances of the same function on the stack will all report the same
+			// value due to how UDFs work, but that's very unlikely to be an issue in practice.
+			// This would bypass Object.Call: (Error.Prototype.__New)({base: Error.Prototype})
+			if (se->type != DbgStack::SE_UDF || !se->udf->func->mClass || se->udf->func->mParam[0].var->ToObject() != this)
+				break;
+		}
+	}
 
 	if (ParamIndexIsOmitted(1)) // "What"
 	{

@@ -65,7 +65,7 @@ IObject *Line::CreateRuntimeException(LPCTSTR aErrorText, LPCTSTR aExtraInfo, Ob
 #else
 	// Without the debugger stack, there's no good way to determine what's throwing. It could be:
 	//g_act[mActionType].Name; // A command implemented as an Action (g_act).
-	//g->CurrentFunc->mName; // A user-defined function (perhaps when mActionType == ACT_THROW).
+	//g->CurrentFunc->mName; // A user-defined function.
 	//???; // A built-in function implemented as a Func (g_BIF).
 	aParams[1].SetValue(_T(""), 0);
 #endif
@@ -80,8 +80,10 @@ IObject *Line::CreateRuntimeException(LPCTSTR aErrorText, LPCTSTR aExtraInfo, Ob
 	obj->SetBase(aPrototype);
 	FuncResult rt;
 	g_script.mCurrLine = this;
+	g_script.mNewRuntimeException = obj;
 	if (!obj->Construct(rt, aParam, aParamCount))
-		return nullptr;
+		obj = nullptr; // Construct released it.
+	g_script.mNewRuntimeException = nullptr;
 	return obj;
 }
 
@@ -152,6 +154,37 @@ ResultType Line::SetThrownToken(global_struct &g, ResultToken *aToken, ResultTyp
 	if (!(g.ExcptMode & EXCPTMODE_CATCH))
 		return g_script.UnhandledException(this, aErrorType); // Usually returns FAIL; may return OK if aErrorType == FAIL_OR_OK.
 	return FAIL;
+}
+
+
+BIF_DECL(BIF_Throw)
+{
+	if (!aParamCount || aParam[aParamCount - 1]->symbol == SYM_MISSING)
+		_f_throw(ERR_EXCEPTION);
+	auto &param = *aParam[aParamCount - 1];
+	ResultToken* token = new ResultToken;
+	token->mem_to_free = nullptr;
+	switch (param.symbol)
+	{
+	case SYM_OBJECT:
+		token->SetValue(param.object);
+		param.object->AddRef();
+		break;
+	case SYM_VAR:
+		param.var->ToToken(*token);
+		break;
+	default:
+		token->CopyValueFrom(param);
+	}
+	if (token->symbol == SYM_STRING && !token->Malloc(token->marker, token->marker_length))
+	{
+		delete token;
+		_f_throw_oom;
+	}
+	if (FAIL == g_script.mCurrLine->SetThrownToken(*g, token, FAIL_OR_OK))
+		aResultToken.SetExitResult(FAIL);
+	else
+		aResultToken.symbol = SYM_MISSING;
 }
 
 
@@ -565,6 +598,8 @@ INT_PTR CALLBACK ErrorBoxProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			{
 				// Call the handler directly since g_hWnd might be NULL if this is a warning dialog.
 				HandleMenuItem(NULL, LOWORD(wParam), NULL);
+				if (LOWORD(wParam) == ID_FILE_RELOADSCRIPT)
+					EndDialog(hwnd, IDCANCEL);
 				return TRUE;
 			}
 		}
@@ -743,7 +778,7 @@ ResultType Line::ValidateVarUsage(Var *aVar, int aUsage)
 	if (   VARREF_IS_WRITE(aUsage)
 		&& (aUsage == VARREF_REF
 			? aVar->Type() != VAR_NORMAL // Aliasing VAR_VIRTUAL is currently unsupported.
-			: aVar->IsReadOnly())   )
+			: aVar->IsReadOnly() && aUsage != VARREF_LVALUE_MAYBE)   )
 		return VarIsReadOnlyError(aVar, aUsage);
 	return OK;
 }
@@ -1018,6 +1053,8 @@ ResultType FResultToError(ResultToken &aResultToken, ExprTokenType *aParam[], in
 			ASSERT(!code);
 			return aResultToken.SetExitResult(FAIL);
 		case FR_FACILITY_ARG:
+			if (aResult == FR_E_ARGS)
+				return aResultToken.Error(ERR_PARAM_INVALID);
 			return aResultToken.ParamError(code, code + aFirstParam < aParamCount ? aParam[code + aFirstParam] : nullptr);
 		case FACILITY_WIN32:
 			if (!code)

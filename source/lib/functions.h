@@ -189,7 +189,7 @@ md_func(MouseClick,
 	(In_Opt, String, Relative))
 md_func(MouseClickDrag,
 	(In_Opt, String, Button),
-	(In, Int32, X1), (In, Int32, Y1),
+	(In_Opt, Int32, X1), (In_Opt, Int32, Y1),
 	(In, Int32, X2), (In, Int32, Y2),
 	(In_Opt, Int32, Speed),
 	(In_Opt, String, Relative))
@@ -200,6 +200,14 @@ md_func(MouseMove,
 	(In_Opt, String, Relative))
 
 md_func(MsgBox, (In_Opt, String, Text), (In_Opt, String, Title), (In_Opt, String, Options), (Ret, String, RetVal))
+
+#ifdef ENABLE_OBJALLOCDATA
+md_func(ObjAllocData, (In, Object, Obj), (In, UIntPtr, Size))
+md_func(ObjFreeData, (In, Object, Obj))
+#endif
+md_func(ObjGetDataPtr, (In, Object, Obj), (Ret, UIntPtr, Ptr))
+md_func(ObjGetDataSize, (In, Object, Obj), (Ret, UIntPtr, Size))
+md_func(ObjSetDataPtr, (In, Object, Obj), (In, UIntPtr, Ptr))
 
 md_func(OnClipboardChange, (In, Object, Function), (In_Opt, Int32, AddRemove))
 md_func(OnError, (In, Object, Function), (In_Opt, Int32, AddRemove))

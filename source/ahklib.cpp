@@ -539,7 +539,10 @@ class AutoHotkeyScript : public ObjectBase
 			return OK;
 		}
 		// Built-in/virtual variable
+		aResultToken.symbol = SYM_INTEGER; // For _f_return_i() and consistency with BIFs.
 		var->Get(aResultToken);
+		if (aResultToken.symbol == SYM_OBJECT)
+			aResultToken.object->AddRef();
 		return aResultToken.Result();
 	}
 
@@ -666,7 +669,7 @@ bool LibNotifyProblem(LPCTSTR aMessage, LPCTSTR aExtra, Line *aLine, bool aWarn)
 {
 	if (!lib_ProblemCallback)
 		return false;
-	static Line sLine(0, 0, ACT_THROW, nullptr, 0);
+	static Line sLine(0, 0, ACT_EXPRESSION, nullptr, 0);
 	if (!aLine)
 	{
 		sLine.mFileIndex = g_script.mCurrFileIndex;

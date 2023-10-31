@@ -1479,12 +1479,18 @@ bool DoesFilePatternExist(LPCTSTR aFilePattern, DWORD *aFileAttr, DWORD aRequire
 		// Skip . and .., which appear to always be listed first (for dir\* and dir\*.*).
 		while (wfd.cFileName[0] == '.' && (!wfd.cFileName[1] || wfd.cFileName[1] == '.' && !wfd.cFileName[2]))
 			if (!FindNextFile(hFile, &wfd))
+			{
+				FindClose(hFile);
 				return false;
+			}
 		if (aRequiredAttr) // Caller wants to check for a file/folder with specific attributes.
 		{
 			while ((wfd.dwFileAttributes & aRequiredAttr) != aRequiredAttr)
 				if (!FindNextFile(hFile, &wfd))
+				{
+					FindClose(hFile);
 					return false;
+				}
 			// Since above didn't return, a file/folder with the required attribute was found.
 		}
 		FindClose(hFile);
@@ -2859,38 +2865,112 @@ HBITMAP IconToBitmap32(HICON ahIcon, bool aDestroyIcon)
 
 
 
-LPTSTR ConvertEscapeSequences(LPTSTR aBuf, LPTSTR aLiteralMap)
+size_t UnescapedLength(LPCTSTR aSrc, size_t aSrcLen)
+{
+	size_t len;
+	for (len = aSrcLen; aSrcLen > 1; --aSrcLen, ++aSrc) // > 1 because a trailing ` would be copied as-is.
+		if (*aSrc == g_EscapeChar)
+			--len, --aSrcLen, ++aSrc;
+	return len;
+}
+
+
+
+LPTSTR ConvertEscapeSequences(LPTSTR aDst, size_t aDstSize, LPCTSTR aSrc, size_t aSrcLen)
+// Copies aSrc to aDst, replacing any escape sequences with their reduced equivalent.
+// String will be truncated if aDstSize - 1 < UnescapedLength(aSrc, aSrcLen).
+// aSrc == aDst is permitted and should not do any unnecessary "copying".
+{
+	auto src = aSrc, src_end = aSrc + aSrcLen;
+	auto dst = aDst, dst_end = aDst + aDstSize - 1;
+	for (LPCTSTR esc;; ++dst, src = esc + 1)
+	{
+		for (esc = src; esc < src_end && *esc != g_EscapeChar; ++esc); // Find the next escape char.
+		size_t seg_len = esc - src; // Calculate length of text segment preceding esc.
+		if (dst != src) // No need to copy or check for overflow when dst == src.
+		{
+			if (dst + seg_len >= dst_end) // Avoid overflow.
+			{
+				tmemmove(dst, src, dst_end - dst); // This may truncate the string if aDstSize-1 < aSrcLen.
+				*dst_end = '\0';
+				break;
+			}
+			//else there's room for seg_len and at least one more character.
+			tmemmove(dst, src, seg_len);
+		}
+		src += seg_len;
+		dst += seg_len;
+		if (esc + 1 >= src_end) // No escape char, or just a trailing escape char.
+		{
+			*dst = '\0';
+			break;
+		}
+		esc++;
+		switch (*esc)
+		{
+			// Only lowercase is recognized for these:
+			case 'a': *dst = '\a'; break;  // alert (bell) character
+			case 'b': *dst = '\b'; break;  // backspace
+			case 'f': *dst = '\f'; break;  // formfeed
+			case 'n': *dst = '\n'; break;  // newline
+			case 'r': *dst = '\r'; break;  // carriage return
+			case 't': *dst = '\t'; break;  // horizontal tab
+			case 'v': *dst = '\v'; break;  // vertical tab
+			case 's': *dst = ' '; break;   // space
+			default: *dst = *esc; break;
+		}
+	}
+	return aDst;
+}
+
+
+
+LPTSTR ConvertEscapeSequences(LPTSTR aBuf)
 // Replaces any escape sequences in aBuf with their reduced equivalent.  For example, if aEscapeChar
 // is accent, Each `n would become a literal linefeed.  aBuf's length should always be the same or
 // lower than when the process started, so there is no chance of overflow.
 {
-	int i;
-	for (i = 0; ; ++i)  // Increment to skip over the symbol just found by the inner for().
+	size_t len = _tcslen(aBuf);
+	return ConvertEscapeSequences(aBuf, len + 1, aBuf, len);
+}
+
+
+
+LPTSTR ConvertSpaceEscapeSequences(LPTSTR aBuf)
+// Replaces the `s and `t escapes sequences with \s and \t, while leaving all other sequences.
+// In particular, `` is left as is so that a subsequent call to ConvertEscapeSequences() won't
+// interpret it as escaping the next char.
+{
+	auto src = _tcschr(aBuf, g_EscapeChar);
+	if (!src)
+		return aBuf;
+	auto dst = src;
+	for ( ; TCHAR c = *src; ++src, ++dst)
 	{
-		for (; aBuf[i] && aBuf[i] != g_EscapeChar; ++i);  // Find the next escape char.
-		if (!aBuf[i]) // end of string.
-			break;
-		LPTSTR cp1 = aBuf + i + 1;
-		switch (*cp1)
+		if (c == g_EscapeChar)
 		{
-			// Only lowercase is recognized for these:
-			case 'a': *cp1 = '\a'; break;  // alert (bell) character
-			case 'b': *cp1 = '\b'; break;  // backspace
-			case 'f': *cp1 = '\f'; break;  // formfeed
-			case 'n': *cp1 = '\n'; break;  // newline
-			case 'r': *cp1 = '\r'; break;  // carriage return
-			case 't': *cp1 = '\t'; break;  // horizontal tab
-			case 'v': *cp1 = '\v'; break;  // vertical tab
-			case 's': *cp1 = ' '; break;   // space
+			switch (src[1])
+			{
+			case 's': c = ' '; ++src; break;
+			case 't': c = '\t'; ++src; break;
+			}
 		}
-		// Replace escape-sequence with its single-char value.  This is done even if the pair isn't
-		// a recognizable escape sequence (e.g. `? becomes ?), which is the Microsoft approach and
-		// might not be a bad way of handling things. Below has a final +1 to include the terminator:
-		tmemmove(aBuf + i, cp1, _tcslen(cp1) + 1);
-		if (aLiteralMap)
-			aLiteralMap[i] = 1;  // In the map, mark this char as literal.
+		*dst = c;
 	}
+	*dst = '\0';
 	return aBuf;
+}
+
+
+
+bool CharIsEscaped(LPCTSTR aChar, LPCTSTR aBuf)
+{
+	// Only the escape char can escape itself, so any odd number of preceding
+	// escape chars means this quote mark is escaped; e.g. `" or ```".
+	bool escaped = false;
+	while (aChar > aBuf && aChar[-1] == g_EscapeChar)
+		escaped = !escaped, --aChar;
+	return escaped;
 }
 
 
@@ -2945,9 +3025,25 @@ int FindExprDelim(LPCTSTR aBuf, TCHAR aDelimiter, int aStartIndex, LPCTSTR aLite
 			// since aDelimiter should be ]/)/}, not :.
 			if (aDelimiter && aDelimiter != ':')
 				continue; // The following isn't needed in this case.
+			if (aBuf[mark + 1] == '.') // Check for ?.property (which is not ternary).
+			{
+				LPTSTR d_end;
+				auto id = aBuf + mark + 2, id_end = find_identifier_end(id);
+				_tcstod(id, &d_end); // This accounts for scientific notation.
+				if (id_end > d_end || id_end == d_end && (*id_end == '(' || *id_end == '['))
+					continue;
+			}
+			do
+				mark++;
+			while (IS_SPACE_OR_TAB(aBuf[mark]));
+			if (_tcschr(EXPR_SYMBOLS_AFTER_MAYBE, aBuf[mark]))
+			{
+				mark--; // Counter the loop's increment.
+				continue; // It's SYM_MAYBE, so don't scan for ':'.
+			}
 			// Scan for the corresponding ':' (or some other closing symbol if that's missing)
 			// so that it won't terminate the sub-expression.
-			mark = FindExprDelim(aBuf, ':', mark + 1, aLiteralMap);
+			mark = FindExprDelim(aBuf, ':', mark, aLiteralMap);
 			if (!aBuf[mark]) // i.e. it isn't safe to do ++mark.
 				return mark; // See case '\0' for comments.
 			continue; // The colon is also skipped via the loop's increment.
@@ -3058,6 +3154,14 @@ int BalanceExpr(LPCTSTR aBuf, int aStartBalance, TCHAR aExpect[], TCHAR *aOpenQu
 			break;
 		}
 	} // for each character.
+}
+
+
+
+int BalanceExpr(LPCTSTR aBuf)
+{
+	TCHAR expect[MAX_BALANCEEXPR_DEPTH];
+	return BalanceExpr(aBuf, 0, expect);
 }
 
 

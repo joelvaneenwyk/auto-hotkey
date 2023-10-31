@@ -1167,7 +1167,7 @@ ResultType ComObject::Invoke(IObject_Invoke_PARAMS_DECL)
 
 	DISPID dispid;
 	HRESULT	hr;
-	if (aFlags & IF_NEWENUM)
+	if ((aFlags & IF_NEWENUM) && (!aParamCount || ParamIndexToInt(0) <= 2))
 	{
 		hr = S_OK;
 		dispid = DISPID_NEWENUM;
@@ -1234,13 +1234,35 @@ ResultType ComObject::Invoke(IObject_Invoke_PARAMS_DECL)
 		}
 	}
 
-	if (SUCCEEDED(hr)
-		// For obj.x:=y where y is a ComObject, invoke PROPERTYPUTREF first:
-		&& !(IS_INVOKE_SET && rgvarg[0].vt == VT_DISPATCH && SUCCEEDED(mDispatch->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_PROPERTYPUTREF, &dispparams, NULL, NULL, NULL))
-		// For obj.x(), invoke METHOD first since PROPERTYGET|METHOD is ambiguous and gets undesirable results in some known cases; but re-invoke with PROPERTYGET only if DISP_E_MEMBERNOTFOUND is returned:
-		  || IS_INVOKE_CALL && !aParamCount && DISP_E_MEMBERNOTFOUND != (hr = mDispatch->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, DISPATCH_METHOD, &dispparams, &varResult, &excepinfo, NULL))))
-		// Invoke PROPERTYPUT or PROPERTYGET|METHOD as appropriate:
-		hr = mDispatch->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, IS_INVOKE_SET ? DISPATCH_PROPERTYPUT : DISPATCH_PROPERTYGET | DISPATCH_METHOD, &dispparams, &varResult, &excepinfo, NULL);
+	if (SUCCEEDED(hr))
+	{
+		WORD flags[2] {0};
+		if (IS_INVOKE_SET)
+		{
+			// Use PROPERTYPUTREF when assigning an object, but fall back to PROPERTYPUT if DISP_E_MEMBERNOTFOUND is
+			// returned.  In the fallback case, the COM server might invoke the object's DISPID_VALUE member to get
+			// a value to assign; e.g. r.Pattern := {__item: "hello"} is the same as r.Pattern := "hello" when r is
+			// a VBScript RegExp object.
+			if (rgvarg[0].vt == VT_DISPATCH)
+				flags[0] = DISPATCH_PROPERTYPUTREF, flags[1] = DISPATCH_PROPERTYPUT;
+			else
+				flags[0] = DISPATCH_PROPERTYPUT;
+		}
+		else
+		{
+			// Make a first attempt using only the one flag matching the local syntax, so that COM servers which
+			// support retrieving or calling the same member (like AutoHotkey) will perform the correct operation.
+			flags[0] = IS_INVOKE_CALL ? DISPATCH_METHOD : DISPATCH_PROPERTYGET;
+			// For backward-compatibility and to account for inconsistencies (like _NewEnum being a property or a
+			// method), let there be a second attempt using the combined flags.  This is probably the same as just
+			// swapping METHOD and PROPERTYGET, but might not be in all cases (i.e. for objects that don't use the
+			// system-provided IDispatch implementation).
+			flags[1] = DISPATCH_METHOD | DISPATCH_PROPERTYGET;
+		}
+		hr = mDispatch->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, flags[0], &dispparams, &varResult, &excepinfo, NULL);
+		if (hr == DISP_E_MEMBERNOTFOUND && flags[1]) // Only this particular HRESULT.
+			hr = mDispatch->Invoke(dispid, IID_NULL, LOCALE_USER_DEFAULT, flags[1], &dispparams, &varResult, &excepinfo, NULL);
+	}
 
 	for (int i = 0; i < aParamCount; i++)
 	{
@@ -1466,6 +1488,7 @@ Object *ComObject::Base()
 
 ComEnum::ComEnum(IEnumVARIANT *enm)
 	: penum(enm)
+	, cheat(false)
 {
 	IServiceProvider *sp;
 	if (SUCCEEDED(enm->QueryInterface<IServiceProvider>(&sp)))
@@ -1486,7 +1509,8 @@ ResultType ComEnum::Next(Var *aVar0, Var *aVar1)
 	VARIANT var[2] = {0};
 	if (penum->Next(1 + (cheat && aVar1), var, NULL) == S_OK)
 	{
-		AssignVariant(*aVar0, var[0], false);
+		if (aVar0)
+			AssignVariant(*aVar0, var[0], false);
 		if (aVar1)
 		{
 			if (cheat && aVar1)
@@ -1595,7 +1619,7 @@ STDMETHODIMP_(ULONG) EnumComCompat::AddRef()
 
 STDMETHODIMP_(ULONG) EnumComCompat::Release()
 {
-	if (mRefCount)
+	if (mRefCount > 1)
 		return --mRefCount;
 	delete this;
 	return 0;
@@ -1625,7 +1649,7 @@ STDMETHODIMP EnumComCompat::Next(ULONG celt, /*out*/ VARIANT *rgVar, /*out*/ ULO
 				TokenToVariant(value, rgVar[1], FALSE);
 			}
 			if (pCeltFetched)
-				*pCeltFetched = pc - 1;
+				*pCeltFetched = pc;
 			break;
 		}
 		// else fall through.

@@ -40,6 +40,7 @@ HWND g_hWnd = NULL;
 HWND g_hWndEdit = NULL;
 HFONT g_hFontEdit = NULL;
 HACCEL g_hAccelTable = NULL;
+MSG *g_CalledByIsDialogMessageOrDispatch = nullptr;
 
 WNDPROC g_TabClassProc = NULL;
 
@@ -48,6 +49,8 @@ modLR_type g_modifiersLR_logical_non_ignored = 0;
 modLR_type g_modifiersLR_physical = 0;
 modLR_type g_modifiersLR_numpad_mask = 0;
 modLR_type g_modifiersLR_ctrlaltdel_mask = 0;
+modLR_type g_modifiersLR_last_pressed = 0;
+DWORD g_modifiersLR_last_pressed_time;
 
 #ifdef FUTURE_USE_MOUSE_BUTTONS_LOGICAL
 WORD g_mouse_buttons_logical = 0;
@@ -234,7 +237,7 @@ Action g_act[] =
 
 	// ASSIGNEXPR: Give it a name for Line::ToText().
 	// 1st param is the target, 2nd (optional) is the value:
-	, {_T(":="), 2, 2} // Same, though param #2 is flagged as numeric so that expression detection is automatic.
+	, {_T(":="), 2, 2}
 
 	// ACT_EXPRESSION, which is a stand-alone expression outside of any IF or assignment-command;
 	// e.g. fn1(123, fn2(y)) or x&=3
@@ -244,9 +247,12 @@ Action g_act[] =
 	, {_T("{"), 0, 0}
 	, {_T("}"), 0, 0}
 
-	, {_T("Static"), 1, 1} // ACT_STATIC (used only at load time).
 	, {_T("#HotIf"), 0, 1}
 	, {_T("Exit"), 0, 1} // ExitCode
+
+	, {_T("Static"), 1, 1} // ACT_STATIC - executes once and then the Line is removed.
+	, {_T("Global"), 1, 1} // ACT_GLOBAL - used only at load time.
+	, {_T("Local"), 1, 1} // ACT_LOCAL - used only at load time.
 
 	, {_T("If"), 1, 1}
 	, {_T("Else"), 0, 0} // No args; it has special handling to support same-line ELSE-actions (e.g. "else if").
@@ -265,7 +271,6 @@ Action g_act[] =
 	, {_T("Try"), 0, 0}
 	, {_T("Catch"), 0, 1}
 	, {_T("Finally"), 0, 0}
-	, {_T("Throw"), 0, 1}
 	, {_T("Switch"), 0, 2}
 	, {_T("Case"), 1, MAX_ARGS}
 };

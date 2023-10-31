@@ -251,10 +251,7 @@ bool MsgSleep(int aSleepDuration, MessageMode aMode)
 			{
 				do_special_msg_filter = false; // Set default.
                 if (g_nFileDialogs) // v1.0.44.12: Also do the special Peek/msg filter below for FileSelect because testing shows that frequently-running timers disrupt the ability to double-click.
-				{
-					GetClassName(fore_window, wnd_class_name, _countof(wnd_class_name));
-					do_special_msg_filter = !_tcscmp(wnd_class_name, _T("#32770"));  // Due to checking g_nFileDialogs above, this means that this dialog is probably FileSelect rather than MsgBox/InputBox/DirSelect (even if this guess is wrong, it seems fairly inconsequential to filter the messages since other pump beneath us on the call-stack will handle them ok).
-				}
+					do_special_msg_filter = IsWindowStandardDialog(fore_window);  // Due to checking g_nFileDialogs above, this means that this dialog is probably FileSelect rather than MsgBox/InputBox/DirSelect (even if this guess is wrong, it seems fairly inconsequential to filter the messages since other pump beneath us on the call-stack will handle them ok).
 				if (!do_special_msg_filter && (focused_control = GetFocus()))
 				{
 					GetClassName(focused_control, wnd_class_name, _countof(wnd_class_name));
@@ -592,10 +589,9 @@ bool MsgSleep(int aSleepDuration, MessageMode aMode)
 			// at the very least, WM_KEYDOWN (VK_ESC) must be intercepted for GuiEscape to work.
 			if (pgui->mControlCount || msg.message != WM_SYSCHAR)
 			{
-				g->CalledByIsDialogMessageOrDispatch = true;
-				g->CalledByIsDialogMessageOrDispatchMsg = msg.message; // Added in v1.0.44.11 because it's known that IsDialogMessage can change the message number (e.g. WM_KEYDOWN->WM_NOTIFY for UpDowns)
+				g_CalledByIsDialogMessageOrDispatch = &msg;
 				msg_was_handled = IsDialogMessage(pgui->mHwnd, &msg); // Pass the dialog HWND, not msg.hwnd, which is often a control.
-				g->CalledByIsDialogMessageOrDispatch = false;
+				g_CalledByIsDialogMessageOrDispatch = nullptr;
 				if (msg_was_handled) // This message was handled by IsDialogMessage() above.
 					continue; // Continue with the main message loop.
 			}
@@ -760,8 +756,10 @@ bool MsgSleep(int aSleepDuration, MessageMode aMode)
 						// keystrokes to the wrong window, or when the hotstring has become suspended.
 						continue;
 					// For details, see comments in the hotkey section of this switch().
-					if (!(hs->mHotCriterion->Type == HOT_IF_ACTIVE || hs->mHotCriterion->Type == HOT_IF_EXIST))
+					if (hs->mHotCriterion->Type == HOT_IF_NOT_ACTIVE || hs->mHotCriterion->Type == HOT_IF_NOT_EXIST)
 						criterion_found_hwnd = NULL; // For "NONE" and "NOT", there is no last found window.
+					else if (HOT_IF_REQUIRES_EVAL(hs->mHotCriterion->Type))
+						criterion_found_hwnd = g_HotExprLFW; // For #if WinExist(WinTitle) and similar.
 				}
 				else // No criterion, so it's a global hotstring.  It can always fire, but it has no "last found window".
 					criterion_found_hwnd = NULL;
@@ -1440,27 +1438,22 @@ break_out_of_main_switch:
 		if ((fore_window = GetForegroundWindow()) != NULL  // There is a foreground window.
 			&& GetWindowThreadProcessId(fore_window, NULL) == g_MainThreadID) // And it belongs to our main thread (the main thread is the only one that owns any windows).
 		{
-			GetClassName(fore_window, wnd_class_name, _countof(wnd_class_name));
-			if (!_tcscmp(wnd_class_name, _T("#32770")))  // MsgBox, InputBox, FileSelect, DirSelect dialog.
+			if (IsWindowStandardDialog(fore_window))  // MsgBox, InputBox, FileSelect, DirSelect dialog.
 			{
-				g->CalledByIsDialogMessageOrDispatch = true; // In case there is any way IsDialogMessage() can call one of our own window proc's rather than that of a MsgBox, etc.
-				g->CalledByIsDialogMessageOrDispatchMsg = msg.message; // Added in v1.0.44.11 because it's known that IsDialogMessage can change the message number (e.g. WM_KEYDOWN->WM_NOTIFY for UpDowns)
-				if (IsDialogMessage(fore_window, &msg))  // This message is for it, so let it process it.
-				{
-					g->CalledByIsDialogMessageOrDispatch = false;
+				g_CalledByIsDialogMessageOrDispatch = &msg; // In case there is any way IsDialogMessage() can call one of our own window proc's rather than that of a MsgBox, etc.
+				msg_was_handled = IsDialogMessage(fore_window, &msg);  // This message is for it, so let it process it.
+				g_CalledByIsDialogMessageOrDispatch = nullptr;
+				if (msg_was_handled)
 					continue;  // This message is done, so start a new iteration to get another msg.
-				}
-				g->CalledByIsDialogMessageOrDispatch = false;
 			}
 		}
 		// Translate keyboard input for any of our thread's windows that need it:
 		if (!g_hAccelTable || !TranslateAccelerator(g_hWnd, g_hAccelTable, &msg))
 		{
-			g->CalledByIsDialogMessageOrDispatch = true; // Relies on the fact that the types of messages we dispatch can't result in a recursive call back to this function.
-			g->CalledByIsDialogMessageOrDispatchMsg = msg.message; // Added in v1.0.44.11. Do it prior to Translate & Dispatch in case either one of them changes the message number (it is already known that IsDialogMessage can change message numbers).
+			g_CalledByIsDialogMessageOrDispatch = &msg;
 			TranslateMessage(&msg);
 			DispatchMessage(&msg); // This is needed to send keyboard input and other messages to various windows and for some WM_TIMERs.
-			g->CalledByIsDialogMessageOrDispatch = false;
+			g_CalledByIsDialogMessageOrDispatch = nullptr;
 		}
 	} // infinite-loop
 }
@@ -2005,6 +1998,18 @@ BOOL IsInterruptible()
 	}
 	//else g->AllowThreadToBeInterrupted is already up-to-date.
 	return (BOOL)g->AllowThreadToBeInterrupted;
+}
+
+
+
+void MsgWaitUnpause()
+{
+	auto &g = *::g;
+	while (g.IsPaused)
+	{
+		MsgWaitForMultipleObjects(0, nullptr, FALSE, INFINITE, QS_ALLINPUT);
+		MsgSleep(-1);
+	}
 }
 
 

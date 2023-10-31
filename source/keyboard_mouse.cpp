@@ -158,16 +158,22 @@ void SendKeys(LPCTSTR aKeys, SendRawModes aSendRaw, SendModes aSendModeOrig, HWN
 		// letters because avoiding that adds flexibility that couldn't be achieved otherwise.
 		// Thus, ^c::Send {Blind}c produces the same result when ^c is substituted for the final c.
 		// But Send {Blind}{LControl down} will generate the extra events even if ctrl already down.
+		modLR_type mod_mask = MODLR_MASK;
 		for (aKeys += 6; *aKeys != '}'; ++aKeys)
 		{
+			modLR_type mod;
 			switch (*aKeys)
 			{
-			case '^': mods_excluded_from_blind |= MOD_LCONTROL|MOD_RCONTROL; break;
-			case '+': mods_excluded_from_blind |= MOD_LSHIFT|MOD_RSHIFT; break;
-			case '!': mods_excluded_from_blind |= MOD_LALT|MOD_RALT; break;
-			case '#': mods_excluded_from_blind |= MOD_LWIN|MOD_RWIN; break;
+			case '<': mod_mask = MODLR_LMASK; continue;
+			case '>': mod_mask = MODLR_RMASK; continue;
+			case '^': mod = MOD_LCONTROL|MOD_RCONTROL; break;
+			case '+': mod = MOD_LSHIFT|MOD_RSHIFT; break;
+			case '!': mod = MOD_LALT|MOD_RALT; break;
+			case '#': mod = MOD_LWIN|MOD_RWIN; break;
 			case '\0': return; // Just ignore the error.
 			}
+			mods_excluded_from_blind |= (mod & mod_mask);
+			mod_mask = MODLR_MASK; // Reset for the next modifier.
 		}
 	}
 
@@ -2747,6 +2753,7 @@ void SendEventArray(int &aFinalKeyDelay, modLR_type aModsDuringSend)
 				modLR_type mods_changed_physically_during_send = aModsDuringSend ^ mods_current;
 				g_modifiersLR_physical &= ~(mods_changed_physically_during_send & aModsDuringSend); // Remove those that changed from down to up.
 				g_modifiersLR_physical |= mods_changed_physically_during_send & mods_current; // Add those that changed from up to down.
+				g_modifiersLR_logical = g_modifiersLR_logical_non_ignored = mods_current; // Necessary for hotkeys to be recognized correctly if modifiers were sent.
 				g_HShwnd = GetForegroundWindow(); // An item done by ResetHook() that seems worthwhile here.
 				// Most other things done by ResetHook() seem like they would do more harm than good to reset here
 				// because of the the time the hook is typically missing is very short, usually under 30ms.
@@ -3501,6 +3508,33 @@ modLR_type GetModifierLRState(bool aExplicitlyGet)
 		// to a process with higher integrity level than our own became active while the key was
 		// down, so we saw the down event but not the up event.
 		modLR_type modifiers_wrongly_down = g_modifiersLR_logical & ~modifiersLR;
+		// modifiers_wrongly_down can sometimes include modifiers that have only just been pressed
+		// but aren't yet reflected by IsKeyDownAsync().  This happens much more often if a keyboard
+		// hook is installed AFTER our own.  The following simple script was enough to reproduce this:
+		//	~*RWin::GetKeyState("RWin", "P")
+		//	>#/::MsgBox  ; This hotkey sometimes or always failed to fire.
+		// The sequence of events was probably something like this:
+		//  - OS detects RWin down.
+		//  - OS calls other hook.
+		//  - Other hook calls ours via CallNextHookEx (meaning its thread is blocked
+		//    waiting for the call to return).
+		//  - Our hook updates key state, posts AHK_HOOK_HOTKEY and RETURNS IMMEDIATELY
+		//    (but the other hook is in another thread, so it doesn't resume immediately).
+		//  - Script thread receives AHK_HOOK_HOTKEY and fires hotkey.
+		//  - Hotkey calls Send or GetKeyState, triggering the section below, adjusting
+		//    g_modifiersLR_logical to match GetAsyncKeyState().
+		//  - Other hook's thread wakes up and returns.
+		//  - OS updates key state, so then GetAsyncKeyState() reports the correct state
+		//    and g_modifiersLR_logical is incorrect.
+		//  - RWin+/ doesn't fire the hotkey because the hook thinks RWin isn't down,
+		//    even though KeyHistory shows that it should be down.
+		// The issue occurred with maybe 50% frequency if the other hook was an AutoHotkey hook,
+		// and 100% frequency if the other hook was implemented by a script (which is slower).
+		// Only the last pressed modifier is excluded, since any other key-down or key-up being
+		// detected would usually mean that the previous call to the hook has finished (although
+		// the hook can be called recursively with artificial input).
+		if (g_modifiersLR_last_pressed && GetTickCount() - g_modifiersLR_last_pressed_time < 20)
+			modifiers_wrongly_down &= ~g_modifiersLR_last_pressed;
 		if (modifiers_wrongly_down)
 		{
 			// Adjust the physical and logical hook state to release the keys that are wrongly down.
@@ -4430,7 +4464,7 @@ bif_impl FResult MouseClick(optl<StrArg> aButton, optl<int> aX, optl<int> aY, op
 	return PerformMouse(ACT_MOUSECLICK, aButton, aX, aY, nullptr, nullptr, aSpeed, aRelative, aClickCount, aDownOrUp);
 }
 
-bif_impl FResult MouseClickDrag(optl<StrArg> aButton, int aX1, int aY1, int aX2, int aY2, optl<int> aSpeed, optl<StrArg> aRelative)
+bif_impl FResult MouseClickDrag(optl<StrArg> aButton, optl<int> aX1, optl<int> aY1, int aX2, int aY2, optl<int> aSpeed, optl<StrArg> aRelative)
 {
 	return PerformMouse(ACT_MOUSECLICKDRAG, aButton, aX1, aY1, aX2, aY2, aSpeed, aRelative, nullptr, nullptr);
 }

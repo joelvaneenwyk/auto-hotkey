@@ -189,7 +189,7 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 				this_token.var = temp_var;
 				this_token.symbol = SYM_VAR;
 			}
-			if (this_token.symbol == SYM_VAR && !VARREF_IS_WRITE(this_token.var_usage))
+			if (this_token.symbol == SYM_VAR && (!VARREF_IS_WRITE(this_token.var_usage) || this_token.var_usage == VARREF_LVALUE_MAYBE))
 			{
 				if (this_token.var->Type() == VAR_VIRTUAL && VARREF_IS_READ(this_token.var_usage))
 				{
@@ -273,6 +273,12 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 						this_token.symbol = SYM_MISSING;
 						goto push_this_token;
 					}
+					else if (this_token.var_usage == VARREF_LVALUE_MAYBE)
+					{
+						// Skip the short-circuit operator and push the variable onto the stack for assignment.
+						++this_postfix;
+						ASSERT(this_postfix->symbol == SYM_OR_MAYBE);
+					}
 				}
 			}
 			goto push_this_token;
@@ -346,10 +352,6 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 					goto abort_with_exception;
 			}
 
-			if (flags & EIF_LEAVE_PARAMS)
-				// Leave params on the stack for the next part of a compound assignment.
-				stack_count = prev_stack_count;
-			
 			// The following two steps are done for built-in functions inside Func::Call:
 			//result_token.symbol = SYM_INTEGER; // Set default return type so that functions don't have to do it if they return INTs.
 			//result_token.func = func;          // Inform function of which built-in function called it (allows code sharing/reduction).
@@ -383,9 +385,14 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 				// reason for early exit) should be considered valid/meaningful only if result_to_return is NULL.
 				goto normal_end_skip_output_var; // output_var is left unchanged in these cases.
 			case INVOKE_NOT_HANDLED:
-				result_token.UnknownMemberError(*func_token, flags, member);
-				aResult = result_token.Result(); // FAIL to abort, OK if user or OnError requested continuation.
-				goto abort_if_result;
+				if (!(flags & EIF_UNSET_PROP))
+				{
+					result_token.UnknownMemberError(*func_token, flags, member);
+					aResult = result_token.Result(); // FAIL to abort, OK if user or OnError requested continuation.
+					goto abort_if_result;
+				}
+				// For something like (a.b?) or (a.b ?? c), INVOKE_NOT_HANDLED is treated as unset.
+				result_token.symbol = SYM_MISSING;
 			}
 
 #ifdef CONFIG_DEBUGGER
@@ -394,7 +401,15 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 				g_Debugger.PostExecFunctionCall(this);
 #endif
 			g_script.mCurrLine = this; // For error-reporting.
-
+			
+			if ((flags & EIF_LEAVE_PARAMS)
+				&& (!(flags & EIF_UNSET_RETURN) || result_token.symbol == SYM_MISSING))
+				// Leave params on the stack for the next part of a compound assignment.
+				// The combination of (EIF_LEAVE_PARAMS | EIF_UNSET_RETURN) implies this is
+				// something like the `x.y` in `x.y ??= z`, which needs to take the params
+				// off the stack if it's going to short-circuit (i.e. result is unset).
+				stack_count = prev_stack_count;
+			
 			if (flags & IT_SET)
 			{
 				result_token.Free();
@@ -407,6 +422,14 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 
 			if (result_token.symbol != SYM_STRING)
 			{
+				if (result_token.symbol == SYM_MISSING && !(flags & EIF_UNSET_RETURN))
+				{
+					result_token.Error(_T("No value was returned.")
+						, this_token.error_reporting_marker
+						, (flags & IT_BITMASK) == IT_GET && !member ? ErrorPrototype::UnsetItem : ErrorPrototype::Unset);
+					aResult = result_token.Result(); // FAIL to abort, OK if user or OnError requested continuation.
+					goto abort_if_result;
+				}
 				// No need for make_result_persistent or early Assign().  Any numeric or object result can
 				// be considered final because it's already stored in permanent memory (the token itself).
 				// Additionally, this_token.mem_to_free is assumed to be NULL since the result is not
@@ -648,8 +671,15 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 		ExprTokenType &right = *STACK_POP;
 		if (right.symbol == SYM_MISSING)
 		{
-			if (this_token.symbol == SYM_OR_MAYBE) // SYM_MISSING is to ?? what False is to ||.
+			if (this_token.symbol == SYM_OR_MAYBE // SYM_MISSING is to ?? what False is to ||.
+				|| this_token.symbol == SYM_COMMA) // The operand of a multi-statement comma is always ignored, so is not required to be a value.
 				continue; // Continue on to evaluate the right branch.
+			if (this_token.symbol == SYM_MAYBE)
+			{
+				++stack_count; // Put unset back on the stack.
+				this_postfix = this_token.circuit_token;
+				continue;
+			}
 			if (this_token.symbol != SYM_ASSIGN) // Anything other than := is not permitted.
 				goto abort_with_exception;
 		}
@@ -664,6 +694,7 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 		case SYM_AND:			// v2: These don't need it either since even numeric strings are considered "true".
 		case SYM_OR:			// right_is_number isn't used at all in these cases since they are handled early.
 		case SYM_OR_MAYBE:		//
+		case SYM_IFF_THEN:		//
 		case SYM_LOWNOT:		//
 		case SYM_HIGHNOT:		//
 		case SYM_REF:
@@ -674,6 +705,10 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 			// result of the comma's left-hand sub-statement.  At this point the right-hand sub-statement
 			// has not yet been evaluated.  Like C++ and other languages, but unlike AutoHotkey v1, the
 			// rightmost operand is preserved, not the leftmost.
+			continue;
+
+		case SYM_MAYBE:
+			++stack_count; // right was already confirmed to not be SYM_MISSING, so just put it back on the stack.
 			continue;
 
 		default:
@@ -704,11 +739,10 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 				{
 					// This will be the final result of this AND/OR because it's right branch was
 					// discarded above without having been evaluated nor any of its functions called:
-					this_token.CopyValueFrom(right);
+					++stack_count; // It's already at stack[stack_count], so this "puts it back" on the stack.
 					// Any SYM_OBJECT on our stack was already put into to_free[], so if this is SYM_OBJECT,
 					// there's no need to do anything; we actually MUST NOT AddRef() unless we also put it
 					// into to_free[].
-					break;
 				}
 			}
 			else
@@ -768,8 +802,10 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 					|| !((UserFunc *)this_token.object)->mInstances)
 				{
 					// target_var definitely isn't a local var of the function being called,
-					// so it's safe to pass as SYM_VAR.
-					this_token.SetVarRef(target_var);
+					// so it's safe to pass as SYM_VAR.  Pass right.var and not target_var,
+					// otherwise GetRef() won't be able to identify the existing VarRef and
+					// may create a new VarRef and a circular reference.
+					this_token.SetVarRef(right.var);
 					goto push_this_token;
 				}
 			}
@@ -887,7 +923,9 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 				case SYM_ASSIGN: // Listed first for performance (it's probably the most common because things like ++ and += aren't expressions when they're by themselves on a line).
 					if (!left.var->Assign(right)) // left.var can be VAR_VIRTUAL in this case.
 						goto abort;
-					if (left.var->Type() != VAR_NORMAL) // VAR_VIRTUAL should not yield SYM_VAR (as some sections of the code wouldn't handle it correctly).
+					if (left.var->Type() != VAR_NORMAL // VAR_VIRTUAL should not yield SYM_VAR (as some sections of the code wouldn't handle it correctly).
+						|| right.symbol == SYM_MISSING // Subsequent operators/calls (confirmed at load-time as being able to handle `unset`) need SYM_MISSING,
+							&& this_postfix[1].symbol != SYM_REF) // except the reference operator, as in &x:=unset.
 						this_token.CopyValueFrom(right); // Doing it this way is more maintainable than other methods, and is unlikely to perform much worse.
 					else
 						this_token.SetVar(left.var);
@@ -1130,7 +1168,7 @@ LPTSTR Line::ExpandExpression(int aArgIndex, ResultType &aResult, ResultToken *a
 						}
 					}
 					// Since "break" was not used, "right" is not a valid type object.
-					error_info = _T("Object");
+					error_info = _T("Class");
 					error_value = &right;
 					goto type_mismatch;
 				}
@@ -1322,9 +1360,6 @@ push_this_token:
 		goto normal_end_skip_output_var; // result_to_return is left at its default of "", though its value doesn't matter as long as it isn't NULL.
 	}
 
-	if (result_token.symbol == SYM_MISSING) // No valid cases permit this as a final result except those already handled above.  Some sections below might not handle it.
-		goto abort_with_exception;
-
 	if (mActionType == ACT_IF || mActionType == ACT_WHILE || mActionType == ACT_UNTIL)
 	{
 		// This is an optimization that improves the speed of ACT_IF by up to 50% (ACT_WHILE is
@@ -1341,6 +1376,7 @@ push_this_token:
 		case SYM_INTEGER:
 		case SYM_FLOAT:
 		case SYM_OBJECT:
+		case SYM_MISSING: // return unset
 			// Return numeric or object result as-is.
 			aResultToken->symbol = result_token.symbol;
 			aResultToken->value_int64 = result_token.value_int64; // Union copy.
@@ -1372,6 +1408,9 @@ push_this_token:
 		// Since above didn't return, the result is a string.  Continue on below to copy it into persistent memory.
 	}
 	
+	if (result_token.symbol == SYM_MISSING) // No valid cases permit this as a final result except those already handled above.  Some sections below might not handle it.
+		goto abort_with_exception;
+
 	//
 	// Store the result of the expression in the deref buffer for the caller.
 	//
@@ -1505,7 +1544,11 @@ abort_with_exception:
 	// FALL THROUGH:
 abort_if_result:
 	if (aResult != FAIL)
+	{
+		if (aResultToken)
+			aResultToken->symbol = SYM_MISSING;
 		goto normal_end_skip_output_var;
+	}
 	// FALL THROUGH:
 abort:
 	// The callers of this function know that the value of aResult (which contains the reason
@@ -1708,7 +1751,8 @@ bool NativeFunc::Call(ResultToken &aResultToken, ExprTokenType *aParam[], int aP
 		
 		for (int i = 0; i < mMinParams; ++i)
 		{
-			if (aParam[i]->symbol == SYM_MISSING)
+			if (aParam[i]->symbol == SYM_MISSING
+				&& !ArgIsOptional(i)) // BuiltInMethod requires this exception for some setters.
 			{
 				aResultToken.Error(ERR_PARAM_REQUIRED);
 				return false; // Abort expression.
@@ -1798,7 +1842,6 @@ bool UserFunc::Call(ResultToken &aResultToken, ExprTokenType *aParam[], int aPar
 	if (!Func::Call(aResultToken, aParam, aParamCount))
 		return false;
 
-		ResultType result;
 		UDFCallInfo recurse(this);
 
 		int j, count_of_actuals_that_have_formals;
@@ -1911,6 +1954,7 @@ bool UserFunc::Call(ResultToken &aResultToken, ExprTokenType *aParam[], int aPar
 			}
 		}
 
+		int default_expr = mParamCount;
 		for (j = 0; j < mParamCount; ++j) // For each formal parameter.
 		{
 			FuncParam &this_formal_param = mParam[j]; // For performance and convenience.
@@ -1948,6 +1992,11 @@ bool UserFunc::Call(ResultToken &aResultToken, ExprTokenType *aParam[], int aPar
 				case PARAM_DEFAULT_INT:   this_formal_param.var->Assign(this_formal_param.default_int64);  break;
 				case PARAM_DEFAULT_FLOAT: this_formal_param.var->Assign(this_formal_param.default_double); break;
 				case PARAM_DEFAULT_UNSET: this_formal_param.var->MarkUninitialized(); break;
+				case PARAM_DEFAULT_EXPR:
+					this_formal_param.var->MarkUninitialized();
+					if (default_expr > j)
+						default_expr = j; // Take note of the first param with a default expr.
+					break;
 				default: //case PARAM_DEFAULT_NONE:
 					// No value has been supplied for this REQUIRED parameter.
 					aResultToken.Error(ERR_PARAM_REQUIRED, this_formal_param.var->mName); // Abort thread.
@@ -2026,7 +2075,27 @@ bool UserFunc::Call(ResultToken &aResultToken, ExprTokenType *aParam[], int aPar
 
 		DEBUGGER_STACK_PUSH(&recurse)
 
-		result = Execute(&aResultToken); // Execute the body of the function.
+		ResultType result = OK;
+		// Execute any default initializers that weren't simple constants.  This is not done in
+		// the loop above for two reasons:
+		//  1) It needs to be after DEBUGGER_STACK_PUSH (which isn't moved because it probably
+		//     doesn't make sense for the other errors to include this function in the stack trace).
+		//  2) To preserve the pre-v2.0.8 behaviour, which allows an initializer to refer to later
+		//     parameters if they are simple values.
+		for (j = default_expr; j < mParamCount; ++j)
+		{
+			if (j < aParamCount && aParam[j]->symbol != SYM_MISSING || mParam[j].default_type != PARAM_DEFAULT_EXPR)
+				continue;
+			result = mParam[j].default_expr->ExecUntil(ONLY_ONE_LINE);
+			if (result != OK)
+			{
+				aResultToken.SetExitResult(result);
+				break;
+			}
+		}
+
+		if (result == OK)
+			result = Execute(&aResultToken); // Execute the body of the function.
 
 		DEBUGGER_STACK_POP()
 		

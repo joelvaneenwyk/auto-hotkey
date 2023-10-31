@@ -631,11 +631,11 @@ bool HotInputLevelAllowsFiring(SendLevelType inputLevel, ULONG_PTR aEventExtraIn
 
 
 HotkeyVariant *Hotkey::CriterionFiringIsCertain(HotkeyIDType &aHotkeyIDwithFlags, bool aKeyUp, ULONG_PTR aExtraInfo
-	, UCHAR &aNoSuppress, bool &aFireWithNoSuppress, LPTSTR aSingleChar)
+	, bool &aFireWithNoSuppress, LPTSTR aSingleChar)
 // v1.0.44: Caller has ensured that aFireWithNoSuppress is true if has already been decided and false if undecided.
 // Upon return, caller can assume that the value in it is now decided rather than undecided.
 // v1.0.42: Caller must not call this for AltTab hotkeys IDs, but this will always return NULL in such cases.
-// aHotkeyToFireUponRelease is sometimes modified for the caller here, as is *aSingleChar (if aSingleChar isn't NULL).
+// *aSingleChar is sometimes modified for the caller here (if aSingleChar isn't NULL).
 // Caller has ensured that aHotkeyIDwithFlags contains a valid/existing hotkey ID.
 // Technically, aHotkeyIDwithMask can be with or without the flags in the high bits.
 // If present, they're removed.
@@ -743,20 +743,17 @@ HotkeyVariant *Hotkey::CriterionFiringIsCertain(HotkeyIDType &aHotkeyIDwithFlags
 	}
 
 	// Otherwise, this hotkey has no variants that can fire.  Caller wants a few things updated in that case.
-	if (!aFireWithNoSuppress) // Caller hasn't yet determined its value with certainty.
-		aFireWithNoSuppress = true; // Fix for v1.0.47.04: Added this line and the one above to fix the fact that a context-sensitive hotkey like "a UP::" would block the down-event of that key even when the right window/criteria aren't met.
-	// If this is a key-down hotkey:
-	// Leave aHotkeyToFireUponRelease set to whatever it was so that the criteria are
-	// evaluated later, at the time of release.  It seems more correct that way, though the actual
-	// change (hopefully improvement) in usability is unknown.
-	// Since the down-event of this key won't be suppressed, it seems best never to suppress the
-	// key-up hotkey (if it has one), if nothing else than to be sure the logical key state of that
-	// key as shown by GetAsyncKeyState() returns the correct value (for modifiers, this is even more
-	// important since them getting stuck down causes undesirable behavior).  If it doesn't have a
-	// key-up hotkey, the up-keystroke should wind up being non-suppressed anyway due to default
-	// processing).
-	if (!aKeyUp)
-		aNoSuppress |= NO_SUPPRESS_NEXT_UP_EVENT;  // Update output parameter for the caller.
+
+	// v1.1.37: The following isn't done anymore because it makes logic elsewhere harder to follow,
+	// and was causing a bug where the key-up event of a custom prefix key wasn't suppressed if the
+	// key had an ineligible key-down hotkey and an eligible key-up hotkey.  Another reason not to
+	// do it is that some callers will consider alternative hotkeys after we return false, so the
+	// proper value of fire_with_no_suppress can only be known when firing IS certain.  The simple
+	// and logical solution to the issue mentioned below is for certain callers to check our return
+	// value, and if false, don't suppress.
+	//if (!aFireWithNoSuppress) // Caller hasn't yet determined its value with certainty.
+	//	aFireWithNoSuppress = true; // Fix for v1.0.47.04: Added this line and the one above to fix the fact that a context-sensitive hotkey like "a UP::" would block the down-event of that key even when the right window/criteria aren't met.
+
 	if (aSingleChar && *aSingleChar != 'i') // 'i' takes precedence because it's used to detect when #InputLevel prevented the hotkey from firing, to prevent it from being suppressed.
 		*aSingleChar = '#'; // '#' in KeyHistory to indicate this hotkey is disabled due to #HotIf WinActive/Exist() criterion.
 	return NULL;
@@ -1514,9 +1511,9 @@ HotkeyVariant *Hotkey::AddVariant(IObject *aCallback, UCHAR aNoSuppress)
 	// mRunAgainAfterFinished
 	// mRunAgainTime
 	// mPriority (default priority is always 0)
+	// mOriginalCallback
 	HotkeyVariant &v = *vp;
 	v.mCallback = aCallback;
-	v.mOriginalCallback = g_script.mLastHotFunc;
 	v.mMaxThreads = g_MaxThreadsPerHotkey;    // The values of these can vary during load-time.
 	v.mMaxThreadsBuffer = g_MaxThreadsBuffer; //
 	v.mInputLevel = g_InputLevel;
@@ -2421,7 +2418,7 @@ ResultType Hotstring::AddHotstring(LPCTSTR aName, IObjectPtr aCallback, LPCTSTR 
 
 Hotstring::Hotstring(LPCTSTR aName, IObjectPtr aCallback, LPCTSTR aOptions, LPCTSTR aHotstring, LPCTSTR aReplacement
 	, bool aHasContinuationSection, UCHAR aSuspend)
-	: mCallback(aCallback)  // Any NULL value will cause failure further below.
+	: mCallback(aCallback)
 	, mName(NULL)
 	, mString(NULL), mReplacement(NULL), mStringLength(0)
 	, mHotCriterion(g->HotCriterion)
@@ -2449,7 +2446,7 @@ Hotstring::Hotstring(LPCTSTR aName, IObjectPtr aCallback, LPCTSTR aOptions, LPCT
 		return;
 	}
 	mStringLength = (UCHAR)_tcslen(mString);
-	if (*aReplacement)
+	if (aReplacement && *aReplacement)
 	{
 		// SimpleHeap is not used for the replacement as it can be changed at runtime by Hotstring().
 		if (   !(mReplacement = _tcsdup(aReplacement))   )

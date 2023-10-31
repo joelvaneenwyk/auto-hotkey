@@ -39,8 +39,8 @@ ObjectMemberMd UserMenu::sMembers[] =
 	md_member(UserMenu, SetColor, CALL, (In_Opt, Variant, Color), (In_Opt, Bool32, ApplyToSubmenus)),
 	md_member(UserMenu, SetIcon, CALL, (In, String, Item), (In, String, File), (In_Opt, Int32, Number), (In_Opt, Int32, Width)),
 	md_member(UserMenu, Show, CALL, (In_Opt, Int32, X), (In_Opt, Int32, Y), (In_Opt, Bool32, Wait)),
-	md_member(UserMenu, ToggleCheck, CALL, (In, String, Item)),
-	md_member(UserMenu, ToggleEnable, CALL, (In, String, Item)),
+	md_member(UserMenu, ToggleCheck, CALL, (In, String, Item), (Ret, Bool32, RetVal)),
+	md_member(UserMenu, ToggleEnable, CALL, (In, String, Item), (Ret, Bool32, RetVal)),
 	md_member(UserMenu, Uncheck, CALL, (In, String, Item)),
 };
 int UserMenu::sMemberCount = _countof(sMembers);
@@ -214,9 +214,12 @@ FResult UserMenu::Check(StrArg aItemName)
 	return SetItemState(aItemName, MFS_CHECKED, MFS_CHECKED);
 }
 
-FResult UserMenu::ToggleCheck(StrArg aItemName)
+FResult UserMenu::ToggleCheck(StrArg aItemName, BOOL &aRetVal)
 {
-	return SetItemState(aItemName, MFS_CHECKED, 0);
+	UINT state;
+	auto fr = SetItemState(aItemName, MFS_CHECKED, 0, &state);
+	aRetVal = (state & MFS_CHECKED) ? TRUE : FALSE;
+	return fr;
 }
 
 FResult UserMenu::Uncheck(StrArg aItemName)
@@ -234,9 +237,12 @@ FResult UserMenu::Enable(StrArg aItemName)
 	return SetItemState(aItemName, 0, MFS_DISABLED);
 }
 
-FResult UserMenu::ToggleEnable(StrArg aItemName)
+FResult UserMenu::ToggleEnable(StrArg aItemName, BOOL &aRetVal)
 {
-	return SetItemState(aItemName, MFS_DISABLED, 0);
+	UINT state;
+	auto fr = SetItemState(aItemName, MFS_DISABLED, 0, &state);
+	aRetVal = (state & MFS_DISABLED) ? FALSE : TRUE;
+	return fr;
 }
 
 
@@ -459,6 +465,7 @@ FResult UserMenu::GetItem(LPCTSTR aNameOrPos, UserMenuItem *&aItem)
 
 
 
+__declspec(noinline)
 FResult UserMenu::ItemNotFoundError(LPCTSTR aItem)
 {
 	return FError(ERR_INVALID_MENU_ITEM, aItem, ErrorPrototype::Target);
@@ -925,13 +932,16 @@ void UserMenu::SetItemState(UserMenuItem *aMenuItem, UINT aState, UINT aStateMas
 
 
 
-FResult UserMenu::SetItemState(StrArg aItemName, UINT aState, UINT aStateMask)
+__declspec(noinline)
+FResult UserMenu::SetItemState(StrArg aItemName, UINT aState, UINT aStateMask, UINT *aNewState)
 {
 	UserMenuItem *item;
 	auto fr = GetItem(aItemName, item);
 	if (fr != OK)
 		return fr;
 	SetItemState(item, aState, aStateMask);
+	if (aNewState)
+		*aNewState = item->mMenuState;
 	return OK;
 }
 
@@ -1240,6 +1250,7 @@ ResultType UserMenu::Display(int aX, int aY, optl<BOOL> aWait)
 	mi.dwStyle = 0;
 	GetMenuInfo(mMenu, &mi);
 	bool temp_topmost = false;
+	bool own_by_fore = false;
 	// Temporarily make the menu modeless to allow new threads to launch without preventing the menu from
 	// accepting user input.  If it was already modeless, don't wait for it to close before returning.
 	bool temp_modeless = !(mi.dwStyle & MNS_MODELESS);
@@ -1258,13 +1269,18 @@ ResultType UserMenu::Display(int aX, int aY, optl<BOOL> aWait)
 		// is shown, the menu windows are reordered, and WM_INITMENUPOPUP for the submenu is received
 		// before its window is created.  Making g_hWnd topmost shouldn't be too disruptive because
 		// SetForegroundWindow() already brought it to the front if it was visible.
-		temp_topmost = this == g_script.mTrayMenu && change_fore
+		// Only g_hWnd and GUI windows can own the menu, otherwise WM_(UN)INITPOPUPMENU won't be caught.
+		// Allowing an active GUI window to own the menu ensures the menu appears on top even if the GUI
+		// is topmost, without making g_hWnd topmost.
+		own_by_fore = !change_fore && GuiType::FindGui(fore_win);
+		temp_topmost = !own_by_fore
+			&& (GetWindowLong(fore_win, GWL_EXSTYLE) & WS_EX_TOPMOST)
 			&& !(GetWindowLong(g_hWnd, GWL_EXSTYLE) & WS_EX_TOPMOST);
 		if (temp_topmost)
 			SetWindowPos(g_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 	}
 	g_MenuIsTempTopmost = temp_topmost;
-	TrackPopupMenuEx(mMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, pt.x, pt.y, g_hWnd, NULL);
+	TrackPopupMenuEx(mMenu, TPM_LEFTALIGN | TPM_LEFTBUTTON, pt.x, pt.y, own_by_fore ? fore_win : g_hWnd, NULL);
 	if (mi.dwStyle & MNS_MODELESS)
 	{
 		// Default to waiting if the menu was modal upon entry to this function, else not waiting.

@@ -176,8 +176,9 @@ enum SymbolType // For use with ExpandExpression() and IsNumeric().
 	, SYM_BEGIN = SYM_OPERAND_END  // SYM_BEGIN is a special marker to simplify the code.
 #define IS_OPERAND(symbol) ((symbol) < SYM_OPERAND_END)
 	, SYM_POST_INCREMENT, SYM_POST_DECREMENT // Kept in this position for use by YIELDS_AN_OPERAND() [helps performance].
-#define IS_POSTFIX_OPERATOR(symbol) ((symbol) == SYM_POST_INCREMENT || (symbol) == SYM_POST_DECREMENT)
-	, SYM_DOT // DOT must precede SYM_OPAREN so YIELDS_AN_OPERAND(SYM_GET) == TRUE, allowing auto-concat to work for it even though it is positioned after its second operand.
+	, SYM_MAYBE
+#define IS_POSTFIX_OPERATOR(symbol) ((symbol) <= SYM_MAYBE && (symbol) >= SYM_POST_INCREMENT)
+	, SYM_DOT // DOT must precede SYM_OPAREN so YIELDS_AN_OPERAND(SYM_DOT) to get the right result (TRUE), since its RHS operand is embedded in the operator itself.
 	, SYM_CPAREN, SYM_CBRACKET, SYM_CBRACE, SYM_OPAREN, SYM_OBRACKET, SYM_OBRACE, SYM_COMMA  // CPAREN (close-paren)/CBRACKET/CBRACE must come right before OPAREN for YIELDS_AN_OPERAND.
 #define IS_OPAREN_LIKE(symbol) ((symbol) <= SYM_OBRACE && (symbol) >= SYM_OPAREN)
 #define IS_CPAREN_LIKE(symbol) ((symbol) <= SYM_CBRACE && (symbol) >= SYM_CPAREN)
@@ -187,13 +188,15 @@ enum SymbolType // For use with ExpandExpression() and IsNumeric().
 #define YIELDS_AN_OPERAND(symbol) ((symbol) < SYM_OPAREN) // CPAREN also covers the tail end of a function call.  Post-inc/dec yields an operand for things like Var++ + 2.  Definitely needs the parentheses around symbol.
 	, SYM_ASSIGN, SYM_ASSIGN_ADD, SYM_ASSIGN_SUBTRACT, SYM_ASSIGN_MULTIPLY, SYM_ASSIGN_DIVIDE, SYM_ASSIGN_INTEGERDIVIDE
 	, SYM_ASSIGN_BITOR, SYM_ASSIGN_BITXOR, SYM_ASSIGN_BITAND, SYM_ASSIGN_BITSHIFTLEFT, SYM_ASSIGN_BITSHIFTRIGHT, SYM_ASSIGN_BITSHIFTRIGHT_LOGICAL // SYM_ASSIGN_BITSHIFTLEFT_LOGICAL doesn't exist but <<<= is the same as <<=
+	, SYM_ASSIGN_MAYBE
 	, SYM_ASSIGN_CONCAT // THIS MUST BE KEPT AS THE LAST (AND SYM_ASSIGN THE FIRST) BECAUSE THEY'RE USED IN A RANGE-CHECK.
 #define IS_ASSIGNMENT_EXCEPT_POST_AND_PRE(symbol) (symbol <= SYM_ASSIGN_CONCAT && symbol >= SYM_ASSIGN) // Check upper bound first for short-circuit performance.
 #define IS_ASSIGNMENT_OR_POST_OP(symbol) (IS_ASSIGNMENT_EXCEPT_POST_AND_PRE(symbol) || symbol == SYM_POST_INCREMENT || symbol == SYM_POST_DECREMENT)
 	, SYM_IFF_ELSE, SYM_IFF_THEN // THESE TERNARY OPERATORS MUST BE KEPT IN THIS ORDER AND ADJACENT TO THE BELOW.
 	, SYM_OR_MAYBE, SYM_OR, SYM_AND // MUST BE KEPT IN THIS ORDER AND ADJACENT TO THE ABOVE for the range checks below.
-#define IS_SHORT_CIRCUIT_OPERATOR(symbol) ((symbol) <= SYM_AND && (symbol) >= SYM_IFF_THEN) // Excludes SYM_IFF_ELSE, which acts as a simple jump after the THEN branch is evaluated.
-#define SYM_USES_CIRCUIT_TOKEN(symbol) ((symbol) <= SYM_AND && (symbol) >= SYM_IFF_ELSE)
+#define IS_SHORT_CIRCUIT_OPERATOR(symbol) ((symbol) <= SYM_AND && ((symbol) >= SYM_IFF_THEN || (symbol) == SYM_MAYBE)) // Excludes SYM_IFF_ELSE, which acts as a simple jump after the THEN branch is evaluated.
+#define SYM_USES_CIRCUIT_TOKEN(symbol) ((symbol) <= SYM_AND && ((symbol) >= SYM_IFF_ELSE || (symbol) == SYM_MAYBE))
+#define SYM_MAYBE_IGNORES_ON_STACK(symbol) (SYM_USES_CIRCUIT_TOKEN(symbol) && (symbol) != SYM_IFF_THEN || (symbol) == SYM_ASSIGN)
 	, SYM_IS
 	, SYM_EQUAL, SYM_EQUALCASE, SYM_NOTEQUAL, SYM_NOTEQUALCASE // =, ==, !=, !==... Keep this in sync with IS_RELATIONAL_OPERATOR() below.
 #define IS_EQUALITY_OPERATOR(symbol) (symbol >= SYM_EQUAL && symbol <= SYM_NOTEQUALCASE)
@@ -228,6 +231,7 @@ enum SymbolType // For use with ExpandExpression() and IsNumeric().
 #define SYM_IS_RESERVED(symbol) ((symbol) >= SYM_RESERVED_WORD) // No need to exclude SYM_COUNT in this case.
 	, SYM_COUNT    // Must be last because it's the total symbol count for everything above.
 	, SYM_INVALID = SYM_COUNT // Some callers may rely on YIELDS_AN_OPERAND(SYM_INVALID)==false.
+	, SYM_TYPED_FIELD
 };
 
 // This should include all operators which can produce SYM_VAR for a subsequent assignment:
@@ -235,9 +239,8 @@ enum SymbolType // For use with ExpandExpression() and IsNumeric().
 	(IS_ASSIGNMENT_EXCEPT_POST_AND_PRE(sym) \
 		|| sym == SYM_PRE_INCREMENT || sym == SYM_PRE_DECREMENT)
 
-
 enum VarRefUsageType { VARREF_READ = 0, VARREF_ISSET, VARREF_READ_MAYBE
-	, VARREF_REF, VARREF_LVALUE, VARREF_OUTPUT_VAR };
+	, VARREF_REF, VARREF_LVALUE, VARREF_LVALUE_MAYBE, VARREF_OUTPUT_VAR };
 #define VARREF_IS_WRITE(var_usage) ((var_usage) >= VARREF_REF)
 #define VARREF_IS_READ(var_usage) ((var_usage) == VARREF_READ || (var_usage) == VARREF_READ_MAYBE) // But not VARREF_ISSET.
 
@@ -315,15 +318,19 @@ struct DECLSPEC_NOVTABLE IDebugProperties
 #define IT_CALL				2
 #define IT_BITMASK			3 // bit-mask for the above.
 
+#define BIMF_UNSET_ARG_1	8 // Flag used by BuiltInMethod.
+
 #define IF_BYPASS_METAFUNC	0x000010 // Skip invocation of meta-functions, such as when calling __Init or __Delete.
-#define IF_SUBSTITUTE_THIS	0x000020 // "this" is a substitute object (i.e. ValueBase()), so prohibit new value properties.
+#define IF_SUBSTITUTE_THIS	0x000020 // Target is a substitute object (i.e. ValueBase()), so refer to "aThisToken" instead of "this".
 #define IF_SUPER			0x000040 // super.something invocation.
-#define IF_DEFAULT			0x000100 // Invoke the default member (call a function object, array indexing, etc.).
+#define IF_NO_NEW_PROPS		0x000080 // Don't permit new properties.
 #define IF_NEWENUM			0x000200 // Workaround for COM objects which don't resolve "_NewEnum" to DISPID_NEWENUM.
 
 #define EIF_VARIADIC		0x010000
 #define EIF_STACK_MEMBER	0x020000
 #define EIF_LEAVE_PARAMS	0x040000
+#define EIF_UNSET_RETURN	0x100000
+#define EIF_UNSET_PROP		0x200000
 
 
 // Helper function for event handlers and __Delete:
@@ -353,13 +360,12 @@ struct ExprTokenType  // Something in the compiler hates the name TokenType, so 
 				CallSite *callsite;   // for SYM_FUNC, and (while parsing) SYM_ASSIGN etc.
 				DerefType *var_deref; // for SYM_VAR while parsing
 				Var *var;             // for SYM_VAR and SYM_DYNAMIC
-				LPTSTR marker;        // for SYM_STRING and (while parsing) SYM_OPAREN
+				LPTSTR marker;        // for SYM_STRING
 				ExprTokenType *circuit_token; // for short-circuit operators
 			};
 			union // Due to the outermost union, this doesn't increase the total size of the struct on x86 builds (but it does on x64).
 			{
-				CallSite *outer_param_list; // Used by ExpressionToPostfix().
-				LPTSTR error_reporting_marker; // Used by ExpressionToPostfix() for binary and unary operators.
+				LPCTSTR error_reporting_marker; // Used by ExpressionToPostfix() for binary and unary operators.
 				size_t marker_length;
 				VarRefUsageType var_usage; // for SYM_DYNAMIC and SYM_VAR (at load time)
 			};
@@ -554,7 +560,7 @@ struct ResultToken : public ExprTokenType
 
 	ResultType SoftFail()
 	{
-		SetValue(_T(""), 0);
+		symbol = SYM_MISSING;
 		// Caller may rely on FAIL to unwind stack, but this->result is still OK.
 		return FAIL;
 	}
@@ -619,24 +625,27 @@ enum enum_act {
 , ACT_EXPRESSION
 // Keep ACT_BLOCK_BEGIN as the first "control flow" action, for range checks with ACT_FIRST_CONTROL_FLOW:
 , ACT_BLOCK_BEGIN, ACT_BLOCK_END
-, ACT_STATIC
 , ACT_HOTKEY_IF // Must be before ACT_FIRST_COMMAND.
 , ACT_EXIT // Used with AddLine(), but excluded from the "named" range below so that the function is preferred.
-, ACT_IF, ACT_FIRST_NAMED_ACTION = ACT_IF
+// ================================================================================
+// Named actions recognized by ConvertActionType:
+, ACT_STATIC, ACT_GLOBAL, ACT_LOCAL
+, ACT_IF
 , ACT_ELSE
 , ACT_LOOP, ACT_LOOP_FILE, ACT_LOOP_REG, ACT_LOOP_READ, ACT_LOOP_PARSE
 , ACT_FOR, ACT_WHILE, ACT_UNTIL // Keep LOOP, FOR, WHILE and UNTIL together and in this order for range checks in various places.
 , ACT_BREAK, ACT_CONTINUE // Keep ACT_FOR..ACT_CONTINUE together for ACT_EXPANDS_ITS_OWN_ARGS.
 , ACT_GOTO
-, ACT_FIRST_JUMP = ACT_BREAK, ACT_LAST_JUMP = ACT_GOTO // Actions which accept a label name.
 , ACT_RETURN
-, ACT_TRY, ACT_CATCH, ACT_FINALLY, ACT_THROW // Keep TRY, CATCH and FINALLY together and in this order for range checks.
+, ACT_TRY, ACT_CATCH, ACT_FINALLY // Keep TRY, CATCH and FINALLY together and in this order for range checks.
 , ACT_SWITCH, ACT_CASE // Keep ACT_TRY..ACT_CASE together for ACT_EXPANDS_ITS_OWN_ARGS.
-, ACT_LAST_NAMED_ACTION = ACT_CASE
 // ================================================================================
 // All others are not included in g_act, and are only used for misc. purposes:
-// ================================================================================
 , ACT_MOUSEMOVE, ACT_MOUSECLICK, ACT_MOUSECLICKDRAG // Used by PerformMouse().
+// ================================================================================
+// Aliases used for range checks:
+, ACT_FIRST_NAMED_ACTION = ACT_STATIC, ACT_LAST_NAMED_ACTION = ACT_CASE
+, ACT_FIRST_JUMP = ACT_BREAK, ACT_LAST_JUMP = ACT_GOTO // Actions which accept a label name.
 };
 
 #define ACT_IS_IF(ActionType) (ActionType == ACT_IF)
@@ -645,6 +654,7 @@ enum enum_act {
 #define ACT_IS_LINE_PARENT(ActionType) (ACT_IS_IF(ActionType) || ActionType == ACT_ELSE \
 	|| ACT_IS_LOOP(ActionType) || (ActionType >= ACT_TRY && ActionType <= ACT_FINALLY) \
 	|| ActionType == ACT_SWITCH)
+#define ACT_IS_VAR_DECL(ActionType) ((ActionType) <= ACT_LOCAL && (ActionType) >= ACT_STATIC)
 // The following groups of action types do not need ExpandArgs() called by ExecUntil(),
 // for one of the following reasons: 1) action has no args, 2) action's args are
 // always fully resolved at load time, 3) action is never executed by ExecUntil(),
@@ -900,11 +910,9 @@ struct ScriptThreadState
 	int UninterruptedLineCount; // Stored as a g-struct attribute in case OnExit func interrupts it while uninterruptible.
 	int UninterruptibleDuration; // Must be int to preserve negative values found in g_script.mUninterruptibleTime.
 	DWORD ThreadStartTime;
-	DWORD CalledByIsDialogMessageOrDispatchMsg; // Detects the fact that some messages (like WM_KEYDOWN->WM_NOTIFY for UpDown controls) are translated to different message numbers by IsDialogMessage (and maybe Dispatch too).
 
 	bool IsPaused;
 	bool MsgBoxTimedOut; // Meaningful only while a MsgBox call is in progress.
-	bool CalledByIsDialogMessageOrDispatch; // Helps avoid launching a monitor function twice for the same message.  This would probably be okay if it were a normal global rather than in the g-struct, but due to messaging complexity, this lends peace of mind and robustness.
 	bool AllowThreadToBeInterrupted; // Whether this thread can be interrupted by custom menu items, hotkeys, or timers.  Separate from g_AllowInterruption because that's for use by ongoing operations, such as SendKeys, and should override the thread's setting.
 };
 
@@ -975,11 +983,6 @@ inline void global_clear_state(ScriptThreadState &g)
 	//g.UninterruptedLineCount = 0;
 	//g.DialogHWND = NULL;
 	//g.DialogOwner = NULL;
-	//g.CalledByIsDialogMessageOrDispatch = false; // CalledByIsDialogMessageOrDispatchMsg doesn't need to be cleared because it's value is only considered relevant when CalledByIsDialogMessageOrDispatch==true.
-	// Above line is done because allowing it to be permanently changed by the auto-exec section
-	// seems like it would cause more confusion that it's worth.  A change to the global default
-	// or even an override/always-use-this-window-number mode can be added if there is ever a
-	// demand for it.
 	//g.mLoopIteration = 0; // Zero seems preferable to 1, to indicate "no loop currently running" when a thread first starts off.  This should probably be left unchanged for backward compatibility (even though script's aren't supposed to rely on it).
 	//g.mLoopFile = NULL;
 	//g.mLoopRegItem = NULL;
