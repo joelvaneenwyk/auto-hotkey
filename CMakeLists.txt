@@ -12,6 +12,70 @@ include_directories(source/libx64call)
 include_directories(source/resources)
 include_directories(source/scripts)
 
+set(AHK_PCRE_COMMON_FILES
+        source/lib_pcre/pcre/config.h
+        source/lib_pcre/pcre/pcre.h
+        source/lib_pcre/pcre/pcret.h
+        source/lib_pcre/pcre/ucp.h
+)
+set(AHK_PCRE_X86_FILES
+        source/lib_pcre/pcre/pcre_chartables.c
+        source/lib_pcre/pcre/pcre_compile.c
+        source/lib_pcre/pcre/pcre_config.c
+        source/lib_pcre/pcre/pcre_dfa_exec.c
+        source/lib_pcre/pcre/pcre_exec.c
+        source/lib_pcre/pcre/pcre_fullinfo.c
+        source/lib_pcre/pcre/pcre_get.c
+        source/lib_pcre/pcre/pcre_globals.c
+        source/lib_pcre/pcre/pcre_internal.h
+        source/lib_pcre/pcre/pcre_jit_compile.c
+        source/lib_pcre/pcre/pcre_maketables.c
+        source/lib_pcre/pcre/pcre_newline.c
+        source/lib_pcre/pcre/pcre_ord2utf8.c
+        source/lib_pcre/pcre/pcre_refcount.c
+        source/lib_pcre/pcre/pcre_string_utils.c
+        source/lib_pcre/pcre/pcre_study.c
+        source/lib_pcre/pcre/pcre_tables.c
+        source/lib_pcre/pcre/pcre_ucd.c
+        source/lib_pcre/pcre/pcre_valid_utf8.c
+        source/lib_pcre/pcre/pcre_version.c
+        source/lib_pcre/pcre/pcre_xclass.c
+)
+set(AHK_PCRE_X64_FILES
+        source/lib_pcre/pcre/pcre16_chartables.c
+        source/lib_pcre/pcre/pcre16_compile.c
+        source/lib_pcre/pcre/pcre16_config.c
+        source/lib_pcre/pcre/pcre16_exec.c
+        source/lib_pcre/pcre/pcre16_fullinfo.c
+        source/lib_pcre/pcre/pcre16_get.c
+        source/lib_pcre/pcre/pcre16_globals.c
+        source/lib_pcre/pcre/pcre16_jit_compile.c
+        source/lib_pcre/pcre/pcre16_newline.c
+        source/lib_pcre/pcre/pcre16_ord2utf16.c
+        source/lib_pcre/pcre/pcre16_refcount.c
+        source/lib_pcre/pcre/pcre16_string_utils.c
+        source/lib_pcre/pcre/pcre16_study.c
+        source/lib_pcre/pcre/pcre16_tables.c
+        source/lib_pcre/pcre/pcre16_ucd.c
+        source/lib_pcre/pcre/pcre16_valid_utf16.c
+        source/lib_pcre/pcre/pcre16_version.c
+        source/lib_pcre/pcre/pcre16_xclass.c
+)
+set(AHK_PCRE_SLJIT_FILES
+        source/lib_pcre/pcre/sljit/sljitConfig.h
+        source/lib_pcre/pcre/sljit/sljitConfigInternal.h
+        source/lib_pcre/pcre/sljit/sljitExecAllocator.c
+        source/lib_pcre/pcre/sljit/sljitLir.c
+        source/lib_pcre/pcre/sljit/sljitLir.h
+        source/lib_pcre/pcre/sljit/sljitUtils.c
+        source/lib_pcre/pcre/sljit/sljitNativeX86_common.c
+)
+set(AHK_PCRE_SLJIT_X86_FILES
+        source/lib_pcre/pcre/sljit/sljitNativeX86_32.c
+)
+set(AHK_PCRE_SLJIT_X64_FILES
+        source/lib_pcre/pcre/sljit/sljitNativeX86_64.c
+)
 
 set(AHK_SOURCE_FILES
         source/lib/CCallback.cpp
@@ -35,55 +99,6 @@ set(AHK_SOURCE_FILES
         source/lib/vars.cpp
         source/lib/wait.cpp
         source/lib/win.cpp
-        source/lib_pcre/pcre/sljit/sljitConfig.h
-        source/lib_pcre/pcre/sljit/sljitConfigInternal.h
-        source/lib_pcre/pcre/sljit/sljitExecAllocator.c
-        source/lib_pcre/pcre/sljit/sljitLir.c
-        source/lib_pcre/pcre/sljit/sljitLir.h
-        source/lib_pcre/pcre/sljit/sljitUtils.c
-        source/lib_pcre/pcre/config.h
-        source/lib_pcre/pcre/pcre.h
-        source/lib_pcre/pcre/pcre16_chartables.c
-        source/lib_pcre/pcre/pcre16_compile.c
-        source/lib_pcre/pcre/pcre16_config.c
-        source/lib_pcre/pcre/pcre16_exec.c
-        source/lib_pcre/pcre/pcre16_fullinfo.c
-        source/lib_pcre/pcre/pcre16_get.c
-        source/lib_pcre/pcre/pcre16_globals.c
-        source/lib_pcre/pcre/pcre16_jit_compile.c
-        source/lib_pcre/pcre/pcre16_newline.c
-        source/lib_pcre/pcre/pcre16_ord2utf16.c
-        source/lib_pcre/pcre/pcre16_refcount.c
-        source/lib_pcre/pcre/pcre16_string_utils.c
-        source/lib_pcre/pcre/pcre16_study.c
-        source/lib_pcre/pcre/pcre16_tables.c
-        source/lib_pcre/pcre/pcre16_ucd.c
-        source/lib_pcre/pcre/pcre16_valid_utf16.c
-        source/lib_pcre/pcre/pcre16_version.c
-        source/lib_pcre/pcre/pcre16_xclass.c
-        source/lib_pcre/pcre/pcre_chartables.c
-        source/lib_pcre/pcre/pcre_compile.c
-        source/lib_pcre/pcre/pcre_config.c
-        source/lib_pcre/pcre/pcre_dfa_exec.c
-        source/lib_pcre/pcre/pcre_exec.c
-        source/lib_pcre/pcre/pcre_fullinfo.c
-        source/lib_pcre/pcre/pcre_get.c
-        source/lib_pcre/pcre/pcre_globals.c
-        source/lib_pcre/pcre/pcre_internal.h
-        source/lib_pcre/pcre/pcre_jit_compile.c
-        source/lib_pcre/pcre/pcre_maketables.c
-        source/lib_pcre/pcre/pcre_newline.c
-        source/lib_pcre/pcre/pcre_ord2utf8.c
-        source/lib_pcre/pcre/pcre_refcount.c
-        source/lib_pcre/pcre/pcre_string_utils.c
-        source/lib_pcre/pcre/pcre_study.c
-        source/lib_pcre/pcre/pcre_tables.c
-        source/lib_pcre/pcre/pcre_ucd.c
-        source/lib_pcre/pcre/pcre_valid_utf8.c
-        source/lib_pcre/pcre/pcre_version.c
-        source/lib_pcre/pcre/pcre_xclass.c
-        source/lib_pcre/pcre/pcret.h
-        source/lib_pcre/pcre/ucp.h
         source/resources/resource.h
         source/abi.h
         source/ahklib.cpp
@@ -153,18 +168,15 @@ set(AHK_SOURCE_FILES
         source/window.h
         source/WinGroup.cpp
         source/WinGroup.h
-        source/lib_pcre/pcre/sljit/sljitNativeX86_common.c
 )
-set (AHK_X86_SOURCE_FILES
-        source/lib_pcre/pcre/sljit/sljitNativeX86_32.c
+set(AHK_X86_SOURCE_FILES
         source/x86call.asm
 )
-set (AHK_X64_SOURCE_FILES
-        source/lib_pcre/pcre/sljit/sljitNativeX86_64.c
+set(AHK_X64_SOURCE_FILES
         source/libx64call/x64call.asm
         source/libx64call/x64stub.asm
 )
-set (AHK_PROJECT_FILES
+set(AHK_PROJECT_FILES
         .gitattributes
         .gitignore
         cspell.json
@@ -175,10 +187,10 @@ set (AHK_PROJECT_FILES
         vsc-build-env.cmd
         source/libx64call/HowToCompile.txt
 )
-set (AHK_RESOURCE_FILES
+set(AHK_RESOURCE_FILES
         source/scripts/minman.js
 )
-add_executable(auto_hotkey ${AHK_SOURCE_FILES})
+add_executable(auto_hotkey
+        ${AHK_SOURCE_FILES})
 set_target_properties(auto_hotkey
         PROPERTIES COMPILE_FLAGS "-DHAVE_CONFIG_H=1 -DUNICODE -D_UNICODE -DLINK_SIZE=4 -DSLJIT_INLINE=inline        -DSLJIT_CONFIG_AUTO=1            -DSLJIT_VERBOSE=0 -DSLJIT_DEBUG=0 -DSLJIT_CONFIG_X86_64=1 -DSLJIT_CONFIG_AUTO=0 -DLINK_SIZE=4 -DSLJIT_VERBOSE=0 -DSLJIT_DEBUG=0         -DSLJIT_CONFIG_X86=0 -DSLJIT_CONFIG_X86_32=0 -DSLJIT_CONFIG_X86_64=1 -DSLJIT_CONFIG_UNSUPPORTED=0         -DSLJIT_CONFIG_DEBUG=0 -DSLJIT_CONFIG_STATIC=1 -DPC")
-
