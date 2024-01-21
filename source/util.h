@@ -27,23 +27,22 @@ GNU General Public License for more details.
 #define Exp32or64(exp32, exp64) (exp32)
 #endif
 
-
 #ifdef UNICODE
 #define tmemcpy			wmemcpy
 #define tmemmove		wmemmove
 #define tmemset			wmemset
 #define tmemcmp			wmemcmp
-#define tmalloc(c)		((LPTSTR) malloc((c) << 1))
-#define trealloc(p, c)	((LPTSTR) realloc((p), (c) << 1))
-#define talloca(c)		((LPTSTR) _alloca((c) << 1))
+#define tmalloc(c)		reinterpret_cast<LPTSTR>(malloc(static_cast<size_t>(c) << 1))
+#define trealloc(p, c)	reinterpret_cast<LPTSTR>(realloc((p), static_cast<size_t>(c) << 1))
+#define talloca(c)		reinterpret_cast<LPTSTR>(_alloca(static_cast<size_t>(c) << 1))
 #else
 #define tmemcpy			(char*)memcpy
 #define tmemmove		memmove
 #define tmemset			memset
 #define tmemcmp			memcmp
-#define tmalloc(c)		((LPTSTR) malloc(c))
-#define trealloc(p, c)	((LPTSTR) realloc((p), (c)))
-#define talloca(c)		((LPTSTR) _alloca(c))
+#define tmalloc(c)		reinterpret_cast<LPTSTR>(malloc(c))
+#define trealloc(p, c)	reinterpret_cast<LPTSTR>(realloc((p), (c)))
+#define talloca(c)		reinterpret_cast<LPTSTR>(_alloca(c))
 #endif
 
 #define IS_SPACE_OR_TAB(c) (c == ' ' || c == '\t')
@@ -70,7 +69,7 @@ inline int cisctype(TBYTE c, int type)
 inline int cisupper(TBYTE c)  { return c <= 'Z' && c >= 'A'; }
 inline int cislower(TBYTE c)  { return c >= 'a' && c <= 'z'; }
 inline int cisdigit(TBYTE c)  { return c <= '9' && c >= '0'; }
-inline int cisalpha(TBYTE c)  { return cisupper(c) || cislower(c); }
+inline int cisalpha(TBYTE c)  { return cisupper(c) != 0 || cislower(c) != 0; }
 
 inline int cisalnum(TBYTE c)  { return ((c & ~0x7F) ? 0 : isalnum(c)); }
 inline int cisxdigit(TBYTE c) { return ((c & ~0x7F) ? 0 : isxdigit(c)); }
@@ -645,7 +644,7 @@ inline char* WideToUTF8(LPCWSTR str){
 }
 inline LPTSTR UTF8ToWide(LPCSTR str){
 	int buf_len = UTF8ToWideChar(str, NULL, 0);
-	LPTSTR buf = (LPTSTR) tmalloc(buf_len);
+	LPTSTR buf = tmalloc(buf_len);
 	if (buf) UTF8ToWideChar(str, buf, buf_len);
 	return buf;
 }
