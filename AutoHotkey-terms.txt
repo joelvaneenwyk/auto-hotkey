@@ -1,8 +1,8 @@
 aaaabaaabaabab
 aabab
 abbab
-AbortIfHung
-AbortRetryIgnore
+ABORTIFHUNG
+ABORTRETRYIGNORE
 ABUF
 ACCEPTFILES
 acceptlabel
