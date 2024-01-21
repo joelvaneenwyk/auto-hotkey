@@ -84,8 +84,8 @@ FResult InputObject::Start()
 FResult InputObject::Wait(optl<double> aMaxTime, StrRet &aRetVal)
 {
 	auto wait_ms = aMaxTime.has_value() ? (UINT)(aMaxTime.value() * 1000) : UINT_MAX;
-	auto tick_start = GetTickCount();
-	while (input.InProgress() && (GetTickCount() - tick_start) < wait_ms)
+	auto tick_start = GetLocalTickCount();
+	while (input.InProgress() && (GetLocalTickCount() - tick_start) < wait_ms)
 		MsgSleep();
 	return get_EndReason(aRetVal);
 }

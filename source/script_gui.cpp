@@ -9567,7 +9567,7 @@ bool GuiType::ControlWmNotify(GuiControlType &aControl, LPNMHDR aNmHdr, INT_PTR 
 		return false;
 
 	InitNewThread(0, false, true);
-	g_script.mLastPeekTime = GetTickCount();
+	g_script.mLastPeekTime = GetLocalTickCount();
 	AddRef();
 	
 	ExprTokenType param[] = { &aControl, (__int64)(DWORD_PTR)aNmHdr };
@@ -9586,7 +9586,7 @@ bool GuiType::MsgMonitor(GuiControlType *aControl, UINT aMsg, WPARAM awParam, LP
 {
 	ExprTokenType param[] = { this, (__int64)awParam, (__int64)(DWORD_PTR)alParam, (__int64)aMsg };
 	InitNewThread(0, false, true);
-	g_script.mLastPeekTime = GetTickCount();
+	g_script.mLastPeekTime = GetLocalTickCount();
 	if (apMsg)
 		g->EventInfo = apMsg->time;
 	auto &events = aControl ? aControl->events : this->mEvents;

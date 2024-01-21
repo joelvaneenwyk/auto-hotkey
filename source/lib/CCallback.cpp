@@ -32,8 +32,7 @@ struct RCCallbackFunc // Used by BIF_CallbackCreate() and related.
 	UINT_PTR (CALLBACK **callfuncptr)(UINT_PTR*, char*);
 	ULONG data4;	//59 84 C4 nn
 	USHORT data5;	//FF E1
-#endif
-#ifdef _WIN64
+#elif _WIN64
 	UINT64 data1; // 0xfffffffff9058d48
 	UINT64 data2; // 0x9090900000000325
 	void (*stub)();
@@ -116,7 +115,7 @@ UINT_PTR CALLBACK RegisterCallbackCStub(UINT_PTR *params, char *address) // Used
 		// because it's likely to hurt any callback that's performance-sensitive.
 	}
 
-	g_script.mLastPeekTime = GetTickCount(); // Somewhat debatable, but might help minimize interruptions when the callback is called via message (e.g. subclassing a control; overriding a WindowProc).
+	g_script.mLastPeekTime = GetLocalTickCount(); // Somewhat debatable, but might help minimize interruptions when the callback is called via message (e.g. subclassing a control; overriding a WindowProc).
 
 	__int64 number_to_return;
 	FuncResult result_token;

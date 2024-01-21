@@ -850,7 +850,7 @@ public:
 	// worst case where the buffer size is exceeded, the text is simply truncated, so it's not too bad:
 	#define LINE_LOG_SIZE 400  // See above.
 	static Line *sLog[LINE_LOG_SIZE];
-	static DWORD sLogTick[LINE_LOG_SIZE];
+	static s_tick_t sLogTick[LINE_LOG_SIZE];
 	static int sLogNext;
 
 #ifdef AUTOHOTKEYSC  // Reduces code size to omit things that are unused, and helps catch bugs at compile-time.
@@ -1253,7 +1253,7 @@ public:
 	static UINT ConvertFileEncoding(ExprTokenType &aToken);
 
 	static LPTSTR LogToText(LPTSTR aBuf, int aBufSize);
-	LPTSTR ToText(LPTSTR aBuf, int aBufSize, bool aCRLF, DWORD aElapsed = 0, bool aLineWasResumed = false, bool aLineNumber = true);
+	LPTSTR ToText(LPTSTR aBuf, int aBufSize, bool aCRLF, s_tick_t aElapsed = 0, bool aLineWasResumed = false, bool aLineNumber = true);
 
 	Line *PreparseError(LPTSTR aErrorText, LPTSTR aExtraInfo = _T(""));
 	// Call this LineError to avoid confusion with Script's error-displaying functions:
@@ -1890,7 +1890,7 @@ class ScriptTimer
 public:
 	IObjectRef mCallback;
 	DWORD mPeriod; // v1.0.36.33: Changed from int to DWORD to double its capacity.
-	DWORD mTimeLastRun;  // TickCount
+	s_tick_t mTimeLastRun;  // TickCount
 	int mPriority;  // Thread priority relative to other threads, default 0.
 	UCHAR mExistingThreads;  // Whether this timer is already running its subroutine.
 	UCHAR mDeleteLocked;     // Lock count to prevent full deletion.  Separate to mExistingThreads so it doesn't prevent timer execution.
@@ -2934,7 +2934,7 @@ public:
 	UserMenu *mFirstMenu, *mLastMenu;
 	UINT mMenuCount;
 
-	DWORD mThisHotkeyStartTime, mPriorHotkeyStartTime;  // Tickcount timestamp of when its subroutine began.
+	s_tick_t mThisHotkeyStartTime, mPriorHotkeyStartTime;  // Tickcount timestamp of when its subroutine began.
 	TCHAR mEndChar;  // The ending character pressed to trigger the most recent non-auto-replace hotstring.
 	modLR_type mThisHotkeyModifiersLR;
 	LPTSTR mFileSpec; // Will hold the full filespec, for convenience.
@@ -2964,7 +2964,7 @@ public:
 
 	int mUninterruptedLineCountMax; // 32-bit for performance (since huge values seem unnecessary here).
 	int mUninterruptibleTime;
-	DWORD mLastPeekTime;
+	s_tick_t mLastPeekTime;
 
 	CStringW mRunAsUser, mRunAsPass, mRunAsDomain;
 
@@ -3013,7 +3013,7 @@ public:
 	ResultType UpdateOrCreateTimer(IObject *aCallback
 		, bool aUpdatePeriod, __int64 aPeriod, bool aUpdatePriority, int aPriority);
 	void DeleteTimer(IObject *aCallback);
-	LPTSTR DefaultDialogTitle();
+	LPTSTR DefaultDialogTitle() const;
 	UserFunc* CreateHotFunc();
 	ResultType DefineFunc(LPTSTR aBuf, bool aStatic = false, FuncDefType aIsInExpression = FuncDefNormal);
 #ifndef AUTOHOTKEYSC

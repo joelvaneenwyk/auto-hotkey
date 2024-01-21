@@ -934,7 +934,7 @@ DWORD GetAHKInstallDir(LPTSTR aBuf)
 
 
 
-LPTSTR Script::DefaultDialogTitle()
+LPTSTR Script::DefaultDialogTitle() const
 {
 	// If the script has set A_ScriptName, use that:
 	if (mScriptName)
@@ -2814,13 +2814,13 @@ void MsgMonitorList::Delete(MsgMonitorStruct *aMonitor)
 {
 	ASSERT(aMonitor >= mMonitor && aMonitor < mMonitor + mCount);
 
-	int mon_index = int(aMonitor - mMonitor);
+	size_t mon_index = aMonitor - mMonitor;
 	// Adjust the index of any active message monitors affected by this deletion.  This allows a
 	// message monitor to delete older message monitors while still allowing any remaining monitors
 	// of that message to be called (when there are multiple).
 	for (MsgMonitorInstance *inst = mTop; inst; inst = inst->previous)
 	{
-		inst->Delete(mon_index);
+		inst->Delete(static_cast<int>(mon_index));
 	}
 	// Remove the item from the array.
 	--mCount;  // Must be done prior to the below.

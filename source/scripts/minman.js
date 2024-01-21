@@ -1,21 +1,21 @@
 /**
  *
- * This script minimizes the size of AutoHotkey.exe.manifest.
+ * This script minimizes the size of "AutoHotkey.exe.manifest" file.
  *
- * NOTE: We use JavaScript because it doesn't depend on AutoHotkey having already been compiled.
+ * NOTE: We use JavaScript (Windows Scripting Host) to not rely on AutoHotkey which may
+ *       not be compiled yet.
  *
  */
 try {
 	var args = WScript.Arguments;
-	if (args.length < 2)
+	if (args.length < 2) {
 		throw new Error("Too few arguments!");
+	}
 	var source = args(0);
 	var dest = args(1);
-
 	var fs = new ActiveXObject("Scripting.FileSystemObject");
 
 	var xml = fs.OpenTextFile(source).ReadAll();
-
 	xml = xml
 		.replace(/<!--[\s\S]*?-->/g, "")	// Remove comments
 		.replace(/>\s*</g, "><")			// Remove space between elements
@@ -24,9 +24,9 @@ try {
 
 	fs.CreateTextFile(dest, true).Write(xml);
 
-	WScript.Echo(`Finished processing manifest '${dest}'`);
+	WScript.Echo("Finished processing manifest: '" + dest + "'");
 }
 catch (ex) {
-	WScript.Echo(`Error in 'minman.js' script: '${ex.message}'`);
+	WScript.Echo("Error in 'minman.js' script: '" + ex.message + "'");
 	WScript.Quit(1);
 }

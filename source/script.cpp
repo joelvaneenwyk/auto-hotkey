@@ -980,7 +980,7 @@ ResultType Script::AutoExecSection()
 
 		// v1.0.25: This is now done here, closer to the actual execution of the first line in the script,
 		// to avoid an unnecessary Sleep(10) that would otherwise occur in ExecUntil:
-		mLastPeekTime = GetTickCount();
+		mLastPeekTime = GetLocalTickCount();
 
 		DEBUGGER_STACK_PUSH(g_AutoExecuteThreadDesc)
 		ExecUntil_result = mFirstLine->ExecUntil(UNTIL_RETURN); // Might never return (e.g. infinite loop or ExitApp).
@@ -3955,7 +3955,7 @@ ResultType Script::UpdateOrCreateTimer(IObject *aCallback
 		// flexible, e.g. a user might want to create a timer that is triggered 5 seconds from now.
 		// In such a case, we don't want the timer's first triggering to occur immediately.
 		// Instead, we want it to occur only when the full 5 seconds have elapsed:
-		timer->mTimeLastRun = GetTickCount();
+		timer->mTimeLastRun = GetLocalTickCount();
 
     // Below is obsolete, see above for why:
 	// We don't have to kill or set the main timer because the only way this function is called
@@ -9685,7 +9685,7 @@ ResultType Line::FinalizeExpression(ArgStruct &aArg)
 
 // Init static vars:
 Line *Line::sLog[] = {NULL};  // Initialize all the array elements.
-DWORD Line::sLogTick[]; // No initialization needed.
+s_tick_t Line::sLogTick[]; // No initialization needed.
 int Line::sLogNext = 0;  // Start at the first element.
 
 #ifdef AUTOHOTKEYSC  // Reduces code size to omit things that are unused, and helps catch bugs at compile-time.
@@ -9728,7 +9728,7 @@ void Line::FreeDerefBufIfLarge()
 #define LOG_LINE(line) \
 { \
 	sLog[sLogNext] = line; \
-	sLogTick[sLogNext++] = GetTickCount(); \
+	sLogTick[sLogNext++] = GetLocalTickCount(); \
 	if (sLogNext >= LINE_LOG_SIZE) \
 		sLogNext = 0; \
 }
@@ -9778,7 +9778,7 @@ ResultType Line::ExecUntil(ExecUntilMode aMode, ResultToken *aResultToken, Line 
 		//    in tight script loops even when MsgSleep(-1) or (0) was called every 10ms or so.
 		// 2) The app is maximally responsive while executing in a tight loop.
 		// 3) Hotkeys are maximally responsive.  For example, if a user has game hotkeys, using
-		//    a GetTickCount() method (which very slightly improves performance by cutting back on
+		//    a GetLocalTickCount() method (which very slightly improves performance by cutting back on
 		//    the number of Peek() calls) would introduce up to 10ms of delay before the hotkey
 		//    finally takes effect.  10ms can be significant in games, where ping (latency) itself
 		//    can sometimes be only 10 or 20ms. UPDATE: It looks like PeekMessage() yields CPU time
@@ -10814,12 +10814,12 @@ ResultType HotkeyCriterion::Eval(LPTSTR aHotkeyName)
 
 	// Update A_ThisHotkey, useful if #HotIf calls a function to do its dirty work.
 	LPTSTR prior_hotkey_name[] = { g_script.mThisHotkeyName, g_script.mPriorHotkeyName };
-	DWORD prior_hotkey_time[] = { g_script.mThisHotkeyStartTime, g_script.mPriorHotkeyStartTime };
+	s_tick_t prior_hotkey_time[] = { g_script.mThisHotkeyStartTime, g_script.mPriorHotkeyStartTime };
 	g_script.mPriorHotkeyName = g_script.mThisHotkeyName;			// For consistency
 	g_script.mPriorHotkeyStartTime = g_script.mThisHotkeyStartTime; //
 	g_script.mThisHotkeyName = aHotkeyName;
 	g_script.mThisHotkeyStartTime = // Updated for consistency.
-	g_script.mLastPeekTime = GetTickCount();
+	g_script.mLastPeekTime = GetLocalTickCount();
 
 	// CALL THE CALLBACK
 	ExprTokenType param = aHotkeyName;
@@ -11879,7 +11879,7 @@ LPTSTR Line::LogToText(LPTSTR aBuf, int aBufSize) // aBufSize should be an int t
 #ifndef AUTOHOTKEYSC
 	int last_file_index = -1;
 #endif
-	DWORD elapsed;
+	s_tick_t elapsed;
 	bool this_item_is_special, next_item_is_special;
 
 	// In the below, sLogNext causes it to start at the oldest logged line and continue up through the newest:
@@ -11914,7 +11914,7 @@ LPTSTR Line::LogToText(LPTSTR aBuf, int aBufSize) // aBufSize should be an int t
 					// a line that actually executed, but rather one that is still executing (waiting).
 					next_item_is_special = true; // Override the default.
 					if (i + 2 == lines_to_show) // The line after this one is not only special, but the last one that will be shown, so recalculate this one correctly.
-						elapsed = GetTickCount() - sLogTick[line_index];
+						elapsed = GetLocalTickCount() - sLogTick[line_index];
 					else // Neither this line nor the special one that follows it is the last.
 					{
 						// Refer to the line after the next (special) line to get this line's correct elapsed time.
@@ -11926,7 +11926,7 @@ LPTSTR Line::LogToText(LPTSTR aBuf, int aBufSize) // aBufSize should be an int t
 				}
 			}
 			else // This is the last line (whether special or not), so compare it's time against the current time instead.
-				elapsed = GetTickCount() - sLogTick[line_index];
+				elapsed = GetLocalTickCount() - sLogTick[line_index];
 #ifndef AUTOHOTKEYSC
 			// If the this line and the previous line are in different files, display the filename:
 			if (last_file_index != sLog[line_index]->mFileIndex)
@@ -11965,7 +11965,7 @@ LPTSTR Line::LogToText(LPTSTR aBuf, int aBufSize) // aBufSize should be an int t
 
 
 
-LPTSTR Line::ToText(LPTSTR aBuf, int aBufSize, bool aCRLF, DWORD aElapsed, bool aLineWasResumed, bool aLineNumber) // aBufSize should be an int to preserve negatives from caller (caller relies on this).
+LPTSTR Line::ToText(LPTSTR aBuf, int aBufSize, bool aCRLF, s_tick_t aElapsed, bool aLineWasResumed, bool aLineNumber) // aBufSize should be an int to preserve negatives from caller (caller relies on this).
 // aBufSize is an int so that any negative values passed in from caller are not lost.
 // Caller has ensured that aBuf isn't NULL.
 // Translates this line into its text equivalent, putting the result into aBuf and

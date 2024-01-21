@@ -124,8 +124,8 @@ bool MsgSleep(int aSleepDuration, MessageMode aMode)
 	// track of how much time remains to sleep (in case the caller's subroutine
 	// is suspended until a new subroutine is finished).  But for small sleep
 	// intervals, don't worry about it.
-	// Note: QueryPerformanceCounter() has very high overhead compared to GetTickCount():
-	DWORD start_time = allow_early_return ? 0 : GetTickCount();
+	// Note: QueryPerformanceCounter() has very high overhead compared to GetLocalTickCount():
+	s_tick_t start_time = allow_early_return ? 0 : GetLocalTickCount();
 
 	// This check is also done even if the main timer will be set (below) so that
 	// an initial check is done rather than waiting 10ms more for the first timer
@@ -973,7 +973,7 @@ bool MsgSleep(int aSleepDuration, MessageMode aMode)
 				// with the HOTKEY command -- a hot string's unique name is always its label since that includes
 				// the options that distinguish between (for example) :c:ahk:: and ::ahk::
 				g_script.mThisHotkeyName = (msg.message == AHK_HOTSTRING) ? hs->mName : hk->mName;
-				g_script.mThisHotkeyStartTime = GetTickCount(); // Fixed for v1.0.35.10 to not happen for GUI threads.
+				g_script.mThisHotkeyStartTime = GetLocalTickCount(); // Fixed for v1.0.35.10 to not happen for GUI threads.
 			}
 
 			// Make every newly launched subroutine start off with the global default values that
@@ -982,7 +982,7 @@ bool MsgSleep(int aSleepDuration, MessageMode aMode)
 			global_struct &g = *::g; // ONLY AFTER above is it safe to "lock in". Reduces code size a bit (31 bytes currently) and may improve performance.  Eclipsing ::g with local g makes compiler remind/enforce the use of the right one.
 
 			// Do this nearly last, right before launching the thread:
-			g_script.mLastPeekTime = GetTickCount();
+			g_script.mLastPeekTime = GetLocalTickCount();
 			// v1.0.38.04: The above now resets mLastPeekTime too to reduce situations in which a thread
 			// doesn't even run one line before being interrupted by another thread.  Here's how that would
 			// happen: ExecUntil() would see that a Peek() is due and call PeekMessage().  The Peek() will
@@ -1003,7 +1003,7 @@ bool MsgSleep(int aSleepDuration, MessageMode aMode)
 			//if (g_script.mLastPeekTime)
 			//	LONG_OPERATION_UPDATE
 			//else
-			//	g_script.mLastPeekTime = GetTickCount();
+			//	g_script.mLastPeekTime = GetLocalTickCount();
 
 			switch (msg.message)
 			{
@@ -1460,15 +1460,15 @@ break_out_of_main_switch:
 
 
 
-ResultType IsCycleComplete(int aSleepDuration, DWORD aStartTime, bool aAllowEarlyReturn)
+ResultType IsCycleComplete(s_duration_t aSleepDuration, s_tick_t aStartTime, bool aAllowEarlyReturn)
 // This function is used just to make MsgSleep() more readable/understandable.
 {
 	// Note: Even if TickCount has wrapped due to system being up more than about 49 days,
 	// DWORD subtraction still gives the right answer as long as aStartTime itself isn't more
 	// than about 49 days ago. Note: must cast to int or any negative result will be lost
 	// due to DWORD type:
-	DWORD tick_now = GetTickCount();
-	if (!aAllowEarlyReturn && (int)(aSleepDuration - (tick_now - aStartTime)) > SLEEP_INTERVAL_HALF)
+	s_tick_t tick_now = GetLocalTickCount();
+	if (!aAllowEarlyReturn && static_cast<s_duration_t>(aSleepDuration - (tick_now - aStartTime)) > SLEEP_INTERVAL_HALF)
 		// Early return isn't allowed and the time remaining is large enough that we need to
 		// wait some more (small amounts of remaining time can't be effectively waited for
 		// due to the 10ms granularity limit of SetTimer):
@@ -1533,7 +1533,7 @@ bool CheckScriptTimers()
 
 	ScriptTimer *ptimer, *next_timer;
 	BOOL at_least_one_timer_launched;
-	DWORD tick_start;
+	s_tick_t tick_start;
 
 	// Note: It seems inconsequential if a subroutine that the below loop executes causes a
 	// new timer to be added to the linked list while the loop is still enumerating the timers.
@@ -1549,7 +1549,7 @@ bool CheckScriptTimers()
 			continue;
 		}
 
-		tick_start = GetTickCount(); // Call GetTickCount() every time in case a previous iteration of the loop took a long time to execute.
+		tick_start = GetLocalTickCount(); // Call GetLocalTickCount() every time in case a previous iteration of the loop took a long time to execute.
 		// As of v1.0.36.03, the following subtracts two DWORDs to support intervals of 49.7 vs. 24.8 days.
 		// This should work as long as the distance between the values being compared isn't greater than
 		// 49.7 days. This is because 1 minus 2 in unsigned math yields 0xFFFFFFFF milliseconds (49.7 days).
@@ -1767,7 +1767,7 @@ bool MsgMonitor(MsgMonitorInstance &aInstance, HWND aWnd, UINT aMsg, WPARAM awPa
 	// v1.0.38.04: Below was added to maximize responsiveness to incoming messages.  The reasoning
 	// is similar to why the same thing is done in MsgSleep() prior to its launch of a thread, so see
 	// MsgSleep for more comments:
-	g_script.mLastPeekTime = GetTickCount();
+	g_script.mLastPeekTime = GetLocalTickCount();
 	++monitor->instance_count;
 
 	// Set up the array of parameters for func->Invoke().
@@ -1889,7 +1889,7 @@ void InitNewThread(int aPriority, bool aSkipUninterruptible, bool aIncrementThre
 				// This also makes it more predictable, since AllowThreadToBeInterrupted is only changed
 				// when IsInterruptible() is called, which might not happen in between changes to the setting.
 				// For explanation of why two fields instead of one are used, see comments in IsInterruptible().
-				g.ThreadStartTime = GetTickCount();
+				g.ThreadStartTime = GetLocalTickCount();
 				g.UninterruptibleDuration = g_script.mUninterruptibleTime;
 			}
 		}
@@ -1966,7 +1966,7 @@ BOOL IsInterruptible()
 	//     - And the computer is suspended/hibernated before the uninterruptibility can time out;
 	//     - And the computer is then resumed 25 days later;
 	//     - Thread would be wrongly uninterruptible for ~24 days because the single-field method
-	//       (TimeThreadWillBecomeInterruptible) would have to subtract that field from GetTickCount()
+	//       (TimeThreadWillBecomeInterruptible) would have to subtract that field from GetLocalTickCount()
 	//       and view the result as a signed integer.
 	// (3) Somewhat similar to #2 above, there may be ways now or in the future for a script to have an
 	//     active/current thread but nothing the script does ever requires a call to IsInterruptible()
@@ -1978,14 +1978,14 @@ BOOL IsInterruptible()
 	// is large such as 20 days, this method can be off by no more than 20 days, which isn't too bad
 	// in percentage terms compared to the alternative, which could cause a timeout of 15 milliseconds to
 	// increase to 24 days.  Windows Vista and beyond have a 64-bit tickcount available, so that may be of
-	// use in future versions (hopefully it performs nearly as well as GetTickCount()).
+	// use in future versions (hopefully it performs nearly as well as GetLocalTickCount()).
 	// v2.0: g->UninterruptedLineCount is checked to ensure that each thread is allowed to execute at least
 	// one line before being interrupted.  This was proven necessary for g->UninterruptibleDuration <= 16
-	// because GetTickCount() updates in increments of 15 or 16 and therefore 16 can be virtually no time
+	// because GetLocalTickCount() updates in increments of 15 or 16 and therefore 16 can be virtually no time
 	// at all.  It might also be needed for larger values if the system is busy.
 	if (   !g->AllowThreadToBeInterrupted // Those who check whether g->AllowThreadToBeInterrupted==false should then check whether it should be made true.
 		&& g->UninterruptibleDuration > -1 // Must take precedence over the below.  g_script.mUninterruptibleTime is not checked because it's supposed to go into effect during thread creation, not after the thread is running and has possibly changed the timeout via 'Thread "Interrupt"'.
-		&& (DWORD)(GetTickCount()- g->ThreadStartTime) >= (DWORD)g->UninterruptibleDuration // See big comment section above.
+		&& (s_tick_t)(GetLocalTickCount()- g->ThreadStartTime) >= (DWORD)g->UninterruptibleDuration // See big comment section above.
 		&& g->UninterruptedLineCount // In case of "Critical" on the first line.  See v2.0 comment above.
 		)
 	{

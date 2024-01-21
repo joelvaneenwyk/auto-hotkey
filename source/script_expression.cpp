@@ -2415,8 +2415,8 @@ end:
 		// (potentially thousands or millions of times per second).  There's no need for the timer
 		// to be precise, so don't reset it more often than twice every second.  (Even checking
 		// now != sLastTimerReset is sufficient.)
-		static DWORD sLastTimerReset = 0;
-		DWORD now = GetTickCount();
+		static s_tick_t sLastTimerReset = 0;
+		s_tick_t now = GetLocalTickCount();
 		if (now - sLastTimerReset > 500 || !g_DerefTimerExists)
 		{
 			sLastTimerReset = now;

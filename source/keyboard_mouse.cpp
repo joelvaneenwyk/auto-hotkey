@@ -54,7 +54,7 @@ static SendModes sSendMode = SM_EVENT; // Whether a SendInput or Hook array is c
 static bool sAbortArraySend;         // No init needed.
 static bool sFirstCallForThisEvent;  //
 static bool sInBlindMode;            //
-static DWORD sThisEventTime;         //
+static s_tick_t sThisEventTime;         //
 
 
 void DisguiseWinAltIfNeeded(vk_type aVK)
@@ -145,7 +145,7 @@ void SendKeys(LPCTSTR aKeys, SendRawModes aSendRaw, SendModes aSendModeOrig, HWN
 		return;
 	global_struct &g = *::g; // Reduces code size and may improve performance.
 
-	DWORD orig_last_peek_time = g_script.mLastPeekTime;
+	s_tick_t orig_last_peek_time = g_script.mLastPeekTime;
 
 	// For performance and also to reserve future flexibility, recognize {Blind} only when it's the first item
 	// in the string.
@@ -255,7 +255,7 @@ void SendKeys(LPCTSTR aKeys, SendRawModes aSendRaw, SendModes aSendModeOrig, HWN
 		// Windows would have already been artificially released by then, so IsKeyDownAsync() wouldn't be
 		// able to detect when the user physically releases the key.
 		if (   (g_script.mThisHotkeyModifiersLR & (MOD_LWIN|MOD_RWIN)) // Limit the scope to only those hotkeys that have a Win modifier, since anything outside that scope hasn't been fully analyzed.
-			&& (GetTickCount() - g_script.mThisHotkeyStartTime) < (DWORD)50 // Ensure g_script.mThisHotkeyModifiersLR is up-to-date enough to be reliable.
+			&& (GetLocalTickCount() - g_script.mThisHotkeyStartTime) < (DWORD)50 // Ensure g_script.mThisHotkeyModifiersLR is up-to-date enough to be reliable.
 			&& aSendModeOrig != SM_PLAY // SM_PLAY is reported to be incapable of locking the computer.
 			&& !sInBlindMode // The philosophy of blind-mode is that the script should have full control, so don't do any waiting during blind mode.
 			&& aSendRaw != SCM_RAW_TEXT // {Text} mode does not trigger Win+L.
@@ -336,7 +336,7 @@ void SendKeys(LPCTSTR aKeys, SendRawModes aSendRaw, SendModes aSendModeOrig, HWN
 		// Even if TickCount has wrapped due to system being up more than about 49 days,
 		// DWORD subtraction still gives the right answer as long as g_script.mThisHotkeyStartTime
 		// itself isn't more than about 49 days ago:
-		if ((GetTickCount() - g_script.mThisHotkeyStartTime) < (DWORD)g_HotkeyModifierTimeout) // Elapsed time < timeout-value
+		if ((GetLocalTickCount() - g_script.mThisHotkeyStartTime) < (DWORD)g_HotkeyModifierTimeout) // Elapsed time < timeout-value
 			mods_down_physically_orig = mods_current & g_script.mThisHotkeyModifiersLR; // Bitwise AND is set intersection.
 		else
 			// Since too much time as passed since the user pressed the hotkey, it seems best,
@@ -871,7 +871,7 @@ brace_case_end: // This label is used to simplify the code without sacrificing p
 			// times out; i.e. elapsed time < timeout-value; DWORD subtraction gives the right answer even if
 			// tick-count has wrapped around).
 			mods_down_physically = (g_HotkeyModifierTimeout < 0 // It never times out or...
-				|| (GetTickCount() - g_script.mThisHotkeyStartTime) < (DWORD)g_HotkeyModifierTimeout) // It didn't time out.
+				|| (GetLocalTickCount() - g_script.mThisHotkeyStartTime) < (DWORD)g_HotkeyModifierTimeout) // It didn't time out.
 				? mods_down_physically_orig : 0;
 
 		// Put any modifiers in sModifiersLR_remapped back into effect, as if they were physically down.
@@ -1364,7 +1364,7 @@ LRESULT CALLBACK PlaybackProc(int aCode, WPARAM wParam, LPARAM lParam)
 			sFirstCallForThisEvent = false;
 			sThisEventHasBeenLogged = false;
 			sThisEventIsScreenCoord = false;
-			for (sThisEventTime = GetTickCount()
+			for (sThisEventTime = GetLocalTickCount()
 				; !sEventPB[sCurrentEvent].message // HC_SKIP has ensured there is a non-delay event, so no need to check sCurrentEvent < sEventCount.
 				; sThisEventTime += sEventPB[sCurrentEvent++].time_to_wait); // Overflow is okay.
 		}
@@ -1465,7 +1465,7 @@ LRESULT CALLBACK PlaybackProc(int aCode, WPARAM wParam, LPARAM lParam)
 					CoordToScreen((int &)event.paramL, (int &)event.paramH, COORD_MODE_MOUSE); // Playback uses screen coords.
 			}
 		}
-		LRESULT time_until_event = (int)(sThisEventTime - GetTickCount()); // Cast to int to avoid loss of negatives from DWORD subtraction.
+		LRESULT time_until_event = (int)(sThisEventTime - GetLocalTickCount()); // Cast to int to avoid loss of negatives from DWORD subtraction.
 		if (time_until_event > 0)
 			return time_until_event;
 		// Otherwise, the event is scheduled to occur immediately (or is overdue).  In case HC_GETNEXT can be
@@ -2897,7 +2897,7 @@ void UpdateKeyEventHistory(bool aKeyUp, vk_type aVK, sc_type aSC)
 	g_KeyHistory[g_KeyHistoryNext].vk = aVK;
 	g_KeyHistory[g_KeyHistoryNext].sc = aSC;
 	g_KeyHistory[g_KeyHistoryNext].event_type = 'i'; // Callers all want this.
-	g_HistoryTickNow = GetTickCount();
+	g_HistoryTickNow = GetLocalTickCount();
 	g_KeyHistory[g_KeyHistoryNext].elapsed_time = (g_HistoryTickNow - g_HistoryTickPrev) / (float)1000;
 	g_HistoryTickPrev = g_HistoryTickNow;
 	HWND fore_win = GetForegroundWindow();
@@ -2927,7 +2927,7 @@ void SetKeyHistoryMax(int aMax)
 	{
 		ZeroMemory(g_KeyHistory, aMax * sizeof(KeyHistoryItem)); // Must be zeroed.
 		g_MaxHistoryKeys = aMax;
-		g_HistoryTickPrev = GetTickCount();
+		g_HistoryTickPrev = GetLocalTickCount();
 		g_HistoryHwndPrev = NULL;
 	}
 	else
@@ -3533,7 +3533,7 @@ modLR_type GetModifierLRState(bool aExplicitlyGet)
 		// Only the last pressed modifier is excluded, since any other key-down or key-up being
 		// detected would usually mean that the previous call to the hook has finished (although
 		// the hook can be called recursively with artificial input).
-		if (g_modifiersLR_last_pressed && GetTickCount() - g_modifiersLR_last_pressed_time < 20)
+		if (g_modifiersLR_last_pressed && GetLocalTickCount() - g_modifiersLR_last_pressed_time < 20)
 			modifiers_wrongly_down &= ~g_modifiersLR_last_pressed;
 		if (modifiers_wrongly_down)
 		{
