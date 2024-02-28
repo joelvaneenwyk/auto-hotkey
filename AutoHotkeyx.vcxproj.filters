@@ -295,9 +295,7 @@
     <ClInclude Include="source\abi.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="source\DispObject.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
+    <ClInclude Include="source\DispObject.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="source\resources\icon_filetype.ico">

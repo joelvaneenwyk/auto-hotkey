@@ -1,13 +1,13 @@
 # AutoHotkeyLib
 
-This project includes the capability to compile as a dll, for hosting the interpreter in another application. This was added in 2022, and is not to be confused with the AutoHotkey.dll first created by tinku99 in 2009 and later developed by HotKeyIt ([HotKeyIt/ahkdll](https://github.com/HotKeyIt/ahkdll/)) and thqby ([thqby/AutoHotkey_H](https://github.com/thqby/AutoHotkey_H/)). In contrast with those projects, this dll aims to provide a more convenient interface for hosting the interpreter, behaving as close to base AutoHotkey as is practical.
+This project includes the capability to compile as a `dll`, for hosting the interpreter in another application. This was added in 2022 and is not to be confused with the `AutoHotkey.dll` first created by `tinku99` in 2009 and later developed by [HotKeyIt](https://github.com/HotKeyIt/ahkdll/) and thqby with [AutoHotkey_H](https://github.com/thqby/AutoHotkey_H/). In contrast with those projects, this dll aims to provide a more convenient interface for hosting the interpreter, behaving as close to base `AutoHotkey` as is practical.
 
-The dll has two primary use cases:
+The `dll` has two primary use cases:
 
 - Host and execute a script; in particular, allow the use of v1 code within a v2 process.
 - Examine a script without executing it; provide data for auto-complete, calltips, navigating to function definitions, etc.
 
-The dll is Unicode-only; ANSI is currently unsupported.
+The `dll` is Unicode-only; ANSI is currently unsupported.
 
 ## Experimental
 
@@ -57,18 +57,18 @@ This was mainly for testing during early development, and is internally used by 
 
 The methods and properties exposed by the Lib object are defined in [ahklib.idl](source/ahklib.idl), in the  `IAutoHotkeyLib` interface. These are subject to change.
 
-**General:**
+### General
 
 - `ExitCode := Lib.Main(CmdLine)` executes a command line more or less the same as AutoHotkey.exe would. If the script is persistent, it does not return. *CmdLine* must include "parameter 0" (which is normally the path of the exe), although its value is ignored. *ExitCode* is either 0 or 2 (CRITICAL_ERROR); ExitApp causes the whole program to terminate.
 - `Lib.LoadFile(FileName)` loads a script file but does not execute it. It can only be called once, unless the dll is unloaded and loaded again. The script is partially initialized for execution, but hotkeys are not manifested.
 - `Lib.OnProblem(Callback)` registers a callback to be called for each warning or error, including load-time errors (if registered before the script is loaded) and exceptions that aren't caught or handled by OnError. If a callback is set, the default error message is not shown. *Callback* receives a single parameter containing the thrown value or exception. If an exception object is created for warnings and errors that otherwise wouldn't have one, `What` is set to "Warn" or "Error".
 
-**Execution:**
+### Execution
 
 - `ExitCode := Lib.Execute()` manifests hotkeys and excecutes the auto-execute section, then returns. Unlike *Main*, it does not initialize the command line arg variables or check for a previous instance of the script. *Execute* can be called multiple times. If this function is not called, it is possible to extract information about the script without executing it, or to execute specific functions without (or before) executing the auto-execute section.
 - `Lib.Script` returns an object which can be used to retrieve or set global variables (as properties) or call functions (as methods).
 
-**Informational:**
+### Informational
 
 - `Lib.Funcs`, `Lib.Vars` and `Lib.Labels` return collections of objects describing functions, variables and labels. See `IDescribeFunc`, `IDescribeVar`, `IDescribeLabel` and `IDescribeParam` in [ahklib.idl](source/ahklib.idl) for usage. Collections use the `IDispCollection` interface, with Funcs, Vars and Labels accepting a name for *Index* and Params accepting a one-based index.
 
@@ -90,7 +90,7 @@ Functions and menu items which execute a command line derived from the path of t
 
 Although the dll only supports loading one main script file, it is possible to execute or examine multiple scripts, one at a time, by unloading the dll and loading it again.
 
-```AutoHotkey
+```ahk
 DllCall("FreeLibrary", "ptr", hmod)  ; hmod was previously returned by LoadLibrary
 ```
 

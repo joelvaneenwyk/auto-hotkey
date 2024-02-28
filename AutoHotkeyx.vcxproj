@@ -80,6 +80,10 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>AutoHotkey</ProjectName>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
   <!-- import common config -->
   <Import Project="Config.vcxproj" />
   <!-- platform: win32 & x64 (common) -->
@@ -117,7 +121,7 @@
   </ItemDefinitionGroup>
   <!-- paths and basic settings -->
   <PropertyGroup>
-    <IntDir>$(ProjectDir)temp\$(Platform)\$(Configuration)\</IntDir>
+    <IntDir>$(ProjectDir)..\.build\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
     <BinDir>bin</BinDir>
     <OutDir>$(BinDir)\</OutDir>
     <OutDir Condition="$(ConfigDebug)">$(BinDir)_debug\</OutDir>
