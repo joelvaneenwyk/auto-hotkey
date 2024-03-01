@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="4.0"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectGuid>{76EFDEE3-81CF-4ADA-94DC-EA5509FF6FFC}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -121,11 +122,11 @@
   </ItemDefinitionGroup>
   <!-- paths and basic settings -->
   <PropertyGroup>
-    <IntDir>$(ProjectDir)..\.build\$(MSBuildProjectName)\$(Platform)\$(Configuration)\</IntDir>
-    <BinDir>bin</BinDir>
-    <OutDir>$(BinDir)\</OutDir>
-    <OutDir Condition="$(ConfigDebug)">$(BinDir)_debug\</OutDir>
-    <OutDir Condition="$(ConfigMinSize)">$(BinDir)_minimal\</OutDir>
+    <IntDir>$(ProjectDir).build/$(MSBuildProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <BinDir>$(ProjectDir)/bin/</BinDir>
+    <OutDir>$(ProjectDir)/bin/</OutDir>
+    <OutDir Condition="$(ConfigDebug)">$(ProjectDir)/bin_debug/</OutDir>
+    <OutDir Condition="$(ConfigMinSize)">$(ProjectDir)/bin_minimal/</OutDir>
     <BinSuffixChar Condition="'$(CharacterSet)'=='MultiByte'">A</BinSuffixChar>
     <BinTypeWord>$(CharacterSet)</BinTypeWord>
     <BinTypeWord Condition="'$(CharacterSet)'=='MultiByte'">ANSI</BinTypeWord>
@@ -331,10 +332,10 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <CustomBuild>
-      <Command>$(Masm) /Cx /Fo"$(SolutionDir)temp\$(Platform)\%(Filename).obj" /c "%(FullPath)"</Command>
+      <Command>$(Masm) /Cx /Fo"$(ProjectDir).build/$(Platform)/$(Configuration)/%(Filename).obj" /c "%(FullPath)"</Command>
       <Message>
       </Message>
-      <Outputs>$(SolutionDir)temp\$(Platform)\%(Filename).obj</Outputs>
+      <Outputs>$(ProjectDir).build/$(Platform)/$(Configuration)/%(Filename).obj</Outputs>
     </CustomBuild>
     <ClCompile>
       <TreatWarningAsError Condition="!$(ConfigDebug)">true</TreatWarningAsError>

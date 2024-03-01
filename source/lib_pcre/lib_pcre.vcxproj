@@ -57,8 +57,8 @@
   </ItemDefinitionGroup>
   <!-- paths and basic settings -->
   <PropertyGroup>
-    <OutDir>$(SolutionDir)temp\$(Platform)\$(Configuration)\</OutDir>
-    <IntDir>$(SolutionDir)temp\$(Platform)\$(Configuration)\lib_pcre\</IntDir>
+    <OutDir>$(ProjectDir).build/$(Platform)/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir).build/$(MSBuildProjectName)/$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
