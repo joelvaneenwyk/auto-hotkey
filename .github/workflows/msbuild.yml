@@ -19,7 +19,31 @@ permissions:
   contents: read
 
 jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [x64]
+        config: [Release]
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    name: Check ${{ matrix.platform }} ${{ matrix.config }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore NuGet packages
+        working-directory: ${{ github.workspace }}
+        run: nuget restore ${{ env.SOLUTION_FILE_PATH }}
+
+      - name: Build
+        working-directory: ${{ github.workspace }}
+        run: msbuild /m /p:Configuration="${{matrix.config}}" /p:Platform="${{matrix.platform}}" ${{env.SOLUTION_FILE_PATH}}
+
   build:
+    needs: check
     strategy:
       fail-fast: false
       matrix:
@@ -32,15 +56,13 @@ jobs:
           - Self-contained
           - Self-contained(debug)
         os: [windows-latest]
-
     runs-on: ${{ matrix.os }}
     name: Build ${{ matrix.platform }} ${{ matrix.config }}
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v2
 
       - name: Restore NuGet packages
         working-directory: ${{ github.workspace }}
@@ -48,6 +70,4 @@ jobs:
 
       - name: Build
         working-directory: ${{ github.workspace }}
-        # Add additional options to the MSBuild command line here (like platform or verbosity level).
-        # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
         run: msbuild /m /p:Configuration="${{matrix.config}}" /p:Platform="${{matrix.platform}}" ${{env.SOLUTION_FILE_PATH}}
