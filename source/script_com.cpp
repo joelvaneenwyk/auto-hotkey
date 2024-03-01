@@ -1868,7 +1868,12 @@ STDMETHODIMP IObjectComCompatible::Invoke(DISPID dispIdMember, REFIID riid, LCID
 			{
 				VARIANT value;
 				value.vt = VT_EMPTY;
-				VariantCopyInd(&value, &varg);
+				HRESULT result = VariantCopyInd(&value, &varg);
+				if (FAILED(result))
+				{
+					varref->Free();
+					return result;
+				}	
 				AssignVariant(*varref, value, false); // false causes value's memory/ref to be transferred to var or freed.
 			}
 		}
