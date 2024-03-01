@@ -26,10 +26,10 @@ exit /b %errorlevel%
     if "%root:~-1%"=="\" set "root=%root:~0,-1%"
     call :LogCommand ^
         "%root%\.build\devenv_log.txt" ^
-        "%root%\vsc-build-env.cmd" devenv "%root%\AutoHotkeyx.sln" /Build
+        "%root%\source\scripts\vsdev.cmd" devenv "%root%\AutoHotkeyx.sln" /Build
     call :LogCommand ^
         "%root%\.build\msbuild_log.txt" ^
-        "%root%\vsc-build-env.cmd" msbuild /m /t:Rebuild /p:Configuration="Release" /p:Platform="x64" "%root%\AutoHotkeyx.sln"
+        "%root%\source\scripts\vsdev.cmd" msbuild /m /t:Rebuild /p:Configuration="Release" /p:Platform="x64" "%root%\AutoHotkeyx.sln"
 exit /b
 
 :$Main

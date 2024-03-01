@@ -12,8 +12,61 @@ setlocal EnableDelayedExpansion
     set "_command=!_command:   = !"
     set "_command=!_command:  = !"
     echo ##[cmd] !_command!
-    !_command!
-exit /b %errorlevel%
+    call !_command!
+endlocal & (
+    set "__COMPAT_LAYER=%__COMPAT_LAYER%"
+    set "__CONDA_OPENSLL_CERT_FILE_SET=%__CONDA_OPENSLL_CERT_FILE_SET%"
+    set "__DOTNET_ADD_32BIT=%__DOTNET_ADD_32BIT%"
+    set "__DOTNET_PREFERRED_BITNESS=%__DOTNET_PREFERRED_BITNESS%"
+    set "__VCVARS_REDIST_VERSION=%__VCVARS_REDIST_VERSION%"
+    set "__VSCMD_PREINIT_PATH=%__VSCMD_PREINIT_PATH%"
+    set "DriverData=%DriverData%"
+    set "ExtensionSdkDir=%ExtensionSdkDir%"
+    set "EXTERNAL_INCLUDE=%EXTERNAL_INCLUDE%"
+    set "FPS_BROWSER_APP_PROFILE_STRING=%FPS_BROWSER_APP_PROFILE_STRING%"
+    set "FPS_BROWSER_USER_PROFILE_STRING=%FPS_BROWSER_USER_PROFILE_STRING%"
+    set "Framework40Version=%Framework40Version%"
+    set "FrameworkDir=%FrameworkDir%"
+    set "FrameworkDir32=%FrameworkDir32%"
+    set "FrameworkVersion=%FrameworkVersion%"
+    set "FrameworkVersion32=%FrameworkVersion32%"
+    set "FSHARPINSTALLDIR=%FSHARPINSTALLDIR%"
+    set "NETFXSDKDir=%NETFXSDKDir%"
+    set "PATH=%PATH%"
+    set "PATHEXT=%PATHEXT%"
+    set "QtMsBuild=%QtMsBuild%"
+    set "SESSIONNAME=%SESSIONNAME%"
+    set "SystemDrive=%SystemDrive%"
+    set "SystemRoot=%SystemRoot%"
+    set "UATDATA=%UATDATA%"
+    set "UCRTVersion=%UCRTVersion%"
+    set "UniversalCRTSdkDir=%UniversalCRTSdkDir%"
+    set "VCIDEInstallDir=%VCIDEInstallDir%"
+    set "VCINSTALLDIR=%VCINSTALLDIR%"
+    set "VCPKG_ROOT=%VCPKG_ROOT%"
+    set "VCToolsInstallDir=%VCToolsInstallDir%"
+    set "VCToolsRedistDir=%VCToolsRedistDir%"
+    set "VCToolsVersion=%VCToolsVersion%"
+    set "VisualStudioVersion=%VisualStudioVersion%"
+    set "VS170COMNTOOLS=%VS170COMNTOOLS%"
+    set "VSCMD_ARG_app_plat=%VSCMD_ARG_app_plat%"
+    set "VSCMD_ARG_HOST_ARCH=%VSCMD_ARG_HOST_ARCH%"
+    set "VSCMD_ARG_TGT_ARCH=%VSCMD_ARG_TGT_ARCH%"
+    set "VSCMD_DEBUG=%VSCMD_DEBUG%"
+    set "VSCMD_VER=%VSCMD_VER%"
+    set "VSINSTALLDIR=%VSINSTALLDIR%"
+    set "VSSDK150INSTALL=%VSSDK150INSTALL%"
+    set "VSSDKINSTALL=%VSSDKINSTALL%"
+    set "WindowsLibPath=%WindowsLibPath%"
+    set "WindowsSDK_ExecutablePath_x64=%WindowsSDK_ExecutablePath_x64%"
+    set "WindowsSDK_ExecutablePath_x86=%WindowsSDK_ExecutablePath_x86%"
+    set "WindowsSdkBinPath=%WindowsSdkBinPath%"
+    set "WindowsSdkDir=%WindowsSdkDir%"
+    set "WindowsSDKLibVersion=%WindowsSDKLibVersion%"
+    set "WindowsSdkVerBinPath=%WindowsSdkVerBinPath%"
+    set "WindowsSDKVersion=%WindowsSDKVersion%"
+    exit /b %errorlevel%
+)
 
 :$Main
 setlocal EnableDelayedExpansion
@@ -58,9 +111,7 @@ setlocal EnableDelayedExpansion
     goto:$MainDone
 
     :$LaunchDevCmd
-        set "_args=C:\Windows\System32\cmd.exe"
-        set "_args=!_args! /D"
-        set "_args=!_args! /C"
+        set VSCMD_DEBUG=2
         echo Found Visual Studio build tools: "%vsdevcmd%"
         call :Command "%vsdevcmd%"
         if "%~1"=="" goto:$MainDone
