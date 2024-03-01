@@ -102,8 +102,12 @@ public:
 	}
 	
 	STDMETHODIMP_(BSTR) get_Name() { return SysAllocString(mFunc->mName); }
+
+#ifdef CONFIG_DLL
 	STDMETHODIMP_(BSTR) get_File() { return SysAllocString(Line::sSourceFile[mFunc->mFileIndex]); }
 	STDMETHODIMP_(UINT) get_Line() { return mFunc->mLineNumber; }
+#endif
+	
 	STDMETHODIMP_(UINT) get_EndLine();
 	STDMETHODIMP_(BOOL) get_IsBuiltIn() { return mFunc->IsBuiltIn(); }
 	STDMETHODIMP_(BOOL) get_IsVariadic() { return mFunc->mIsVariadic; }
