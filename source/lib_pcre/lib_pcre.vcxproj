@@ -43,7 +43,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <!-- import common config -->
-  <Import Project="..\..\AutoHotkeyx.props" />
+  <Import Project="../../AutoHotkeyx.props" />
   <!-- platform: win32 -->
   <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
     <ClCompile>
@@ -57,8 +57,8 @@
   </ItemDefinitionGroup>
   <!-- paths and basic settings -->
   <PropertyGroup>
-    <OutDir>$(ProjectDir).build/$(Platform)/$(Configuration)/</OutDir>
-    <IntDir>$(ProjectDir).build/$(MSBuildProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <OutDir>$(ProjectDir)../../.build/$(Platform)/$(Configuration)/</OutDir>
+    <IntDir>$(ProjectDir)../../.build/$(MSBuildProjectName)/$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -68,7 +68,7 @@
       <ProgramDataBaseFileName Condition="'$(Configuration)|$(Platform)'=='Debug(mbcs)|Win32'">$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Lib>
-      <OutputFile>$(OutDir)lib_pcre.lib</OutputFile>
+      <OutputFile>$(OutDir)$(TargetFileName)</OutputFile>
     </Lib>
   </ItemDefinitionGroup>
   <!-- Release -->

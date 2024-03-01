@@ -1,8 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  
   <PropertyGroup>
-  
     <!-- flags to make things easier -->
     <ConfigRelease>false</ConfigRelease>
     <ConfigDebug>false</ConfigDebug>
@@ -13,36 +11,36 @@
     <ConfigDebug Condition="$(Configuration.Contains('ebug'))">true</ConfigDebug>
     <ConfigSC Condition="$(Configuration.Contains('Self-contained'))">true</ConfigSC>
     <ConfigDll Condition="$(Configuration.Contains('.dll'))">true</ConfigDll>
-    
+
     <!-- CharacterSet may be set on command-line:
       MSBuild AutoHotkeyx.sln /p:Configuration=Release;CharacterSet=MultiByte -->
     <CharacterSet>Unicode</CharacterSet>
     <!-- Set default for '(mbcs)' configurations. Can also be overridden on command-line, but that wouldn't make sense. -->
     <CharacterSet Condition="$(Configuration.Contains('mbcs'))">MultiByte</CharacterSet>
-    
+
     <!-- global setting -->
     <WholeProgramOptimization Condition="!$(ConfigDebug)">true</WholeProgramOptimization>
     <GenerateManifest>false</GenerateManifest>
-    
   </PropertyGroup>
+
   <ItemDefinitionGroup>
     <ClCompile>
-    
+
       <!-- pre-processor definition: NDEBUG/_DEBUG -->
       <PreprocessorDefinitions Condition="!$(ConfigDebug)">NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <PreprocessorDefinitions Condition=" $(ConfigDebug)">_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      
+
       <!-- global setting -->
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <WarningLevel>Level3</WarningLevel>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
-      
+
       <!-- default -->
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
-      
+
     </ClCompile>
   </ItemDefinitionGroup>
-  
+
   <!-- misc optimizations -->
   <ItemDefinitionGroup Condition="!$(ConfigDebug)">
     <ClCompile>
@@ -53,7 +51,7 @@
       <BufferSecurityCheck>false</BufferSecurityCheck>
       <AdditionalOptions Condition="$(PlatformToolsetVersion) &gt;= 140">/Zc:threadSafeInit- %(AdditionalOptions)</AdditionalOptions>
     </ClCompile>
-    <Link> <!-- note linker settings don't apply to lib_pcre -->
+    <Link>      <!-- note linker settings don't apply to lib_pcre -->
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <ProgramDatabaseFile></ProgramDatabaseFile>
       <OptimizeReferences>true</OptimizeReferences>
@@ -68,7 +66,7 @@
   <PropertyGroup>
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
-  
+
   <!-- minimum size: dynamically-linked crt, favor size over speed -->
   <ItemDefinitionGroup Condition="$(ConfigMinSize)">
     <ClCompile>
@@ -79,7 +77,7 @@
       <IgnoreSpecificDefaultLibraries>libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
-  
+
   <!-- debug settings, defined last to override things set above -->
   <ItemDefinitionGroup Condition="$(ConfigDebug)">
     <ClCompile>
@@ -88,28 +86,30 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
     </ClCompile>
-    <Link> <!-- note linker settings don't apply to lib_pcre -->
+    <Link>      <!-- note linker settings don't apply to lib_pcre -->
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  
+
   <!-- import standard defaults -->
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" Condition="exists('$(VCTargetsPath)\Microsoft.Cpp.Default.props')" />
 
   <PropertyGroup>
     <!-- DefaultPlatformToolset contains the toolset of the current VS in 2012+ -->
     <PlatformToolset Condition="'$(DefaultPlatformToolset)' != ''">$(DefaultPlatformToolset)</PlatformToolset>
     <PlatformToolset Condition="Exists('$(VCTargetsPath)\Platforms\$(Platform)\PlatformToolsets\$(PlatformToolset)_xp')">$(PlatformToolset)_xp</PlatformToolset>
   </PropertyGroup>
+
   <PropertyGroup>
     <!-- Disable the upgrade prompt when first opening the project. -->
     <VCProjectUpgraderObjectName>NoUpgrade</VCProjectUpgraderObjectName>
   </PropertyGroup>
 
   <!-- import essential stuff -->
-  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" Condition="exists('$(VCTargetsPath)\Microsoft.Cpp.props')" />
+
   <ImportGroup Label="PropertySheets">
-  <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
   </ImportGroup>
 
 </Project>
