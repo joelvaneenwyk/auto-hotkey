@@ -408,8 +408,7 @@
   </ItemGroup>
   <Target Name="ApplyMinSizePCH" BeforeTargets="ClCompile" Condition="!$(ConfigMinSize)">
     <!-- This target configures the PCH path for files with Optimization == MinSpace,
-    which would otherwise need PCH turned off, causing slower build times.  MinSpace.pch
-    is created when pch_min.cpp is compiled. -->
+    which would otherwise need PCH turned off, causing slower build times. -->
     <ItemGroup>
       <ClCompile Condition="'%(ClCompile.Optimization)' == 'MinSpace'">
         <PrecompiledHeaderOutputFile Condition="!$(ConfigDebug)">$(IntDir)MinSize.pch</PrecompiledHeaderOutputFile>
