@@ -6,8 +6,17 @@ setlocal
     set _error=%~1
 endlocal & exit /b %_error%
 
+:Command
+setlocal EnableDelayedExpansion
+    set "_command=%*"
+    set "_command=!_command:   = !"
+    set "_command=!_command:  = !"
+    echo ##[cmd] !_command!
+    !_command!
+exit /b %errorlevel%
+
 :$Main
-setlocal EnableExtensions
+setlocal EnableDelayedExpansion
     :: Assume build environment is already setup if msbuild can be located
     where msbuild >nul 2>nul && goto:$MainDone
 
@@ -20,8 +29,9 @@ setlocal EnableExtensions
     if "%ProgramFiles(x86)%"=="" set ProgramFiles(x86)=%ProgramFiles%
     set vswhere="%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
     if not exist %vswhere% (
-        echo vswhere.exe not found; unable to locate build tools.
-        exit 1
+        echo [ERROR] vswhere.exe not found; unable to locate build tools.
+        call :SetError 81
+        goto:$MainDone
     )
 
     :: This should work for Visual Studio
@@ -44,14 +54,23 @@ setlocal EnableExtensions
 
     :: If we're still running, vsdevcmd wasn't executed
     echo [ERROR] Unable to locate build tools.
-        call :SetError 80
-        goto:$MainDone
+    call :SetError 80
+    goto:$MainDone
 
     :$LaunchDevCmd
+        set "_args=C:\Windows\System32\cmd.exe"
+        set "_args=!_args! /D"
+        set "_args=!_args! /C"
         echo Found Visual Studio build tools: "%vsdevcmd%"
-        echo cmd /d /k "%vsdevcmd%"
-        cmd /d /k "%vsdevcmd%"
+        call :Command "%vsdevcmd%"
+        if "%~1"=="" goto:$MainDone
+
+        call :Command %*
         goto:$MainDone
 
     :$MainDone
-endlocal & exit /b %ERRORLEVEL%
+    set "RETURN_VALUE=%ERRORLEVEL%"
+endlocal & (
+    set "PATH=%PATH%"
+    exit /b %RETURN_VALUE%
+)

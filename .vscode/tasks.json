@@ -6,7 +6,7 @@
         "options": {
             "shell": {
                 "executable": "cmd.exe",
-                "args": ["/C", "${workspaceFolder}/vsc-build-env.cmd", "&&"]
+                "args": ["/C", "${workspaceFolder}/vsc-build-env.cmd"]
             }
         },
         "problemMatcher": "$msCompile"
