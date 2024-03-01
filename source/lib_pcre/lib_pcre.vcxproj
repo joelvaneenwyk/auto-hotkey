@@ -57,7 +57,7 @@
   </ItemDefinitionGroup>
   <!-- paths and basic settings -->
   <PropertyGroup>
-    <OutDir>$(ProjectDir)../../.build/$(Platform)/$(Configuration)/</OutDir>
+    <OutDir>$(ProjectDir)../../bin/$(Platform)/$(Configuration)/</OutDir>
     <IntDir>$(ProjectDir)../../.build/$(MSBuildProjectName)/$(Platform)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>

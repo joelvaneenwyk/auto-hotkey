@@ -123,10 +123,10 @@
   <!-- paths and basic settings -->
   <PropertyGroup>
     <IntDir>$(ProjectDir).build/$(MSBuildProjectName)/$(Platform)/$(Configuration)/</IntDir>
-    <BinDir>$(ProjectDir)/bin/</BinDir>
-    <OutDir>$(ProjectDir)/bin/</OutDir>
-    <OutDir Condition="$(ConfigDebug)">$(ProjectDir)/bin_debug/</OutDir>
-    <OutDir Condition="$(ConfigMinSize)">$(ProjectDir)/bin_minimal/</OutDir>
+    <BinDir>$(ProjectDir)/bin/release/</BinDir>
+    <OutDir>$(ProjectDir)/bin/release/</OutDir>
+    <OutDir Condition="$(ConfigDebug)">$(ProjectDir)/bin/debug/</OutDir>
+    <OutDir Condition="$(ConfigMinSize)">$(ProjectDir)/bin/minimal/</OutDir>
     <BinSuffixChar Condition="'$(CharacterSet)'=='MultiByte'">A</BinSuffixChar>
     <BinTypeWord>$(CharacterSet)</BinTypeWord>
     <BinTypeWord Condition="'$(CharacterSet)'=='MultiByte'">ANSI</BinTypeWord>
