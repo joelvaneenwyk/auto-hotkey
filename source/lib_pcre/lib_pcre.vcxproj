@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="4.0"
+  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectGuid>{39037993-9571-4DF2-8E39-CD2909043574}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -42,7 +43,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <!-- import common config -->
-  <Import Project="..\..\Config.vcxproj" />
+  <Import Project="..\..\AutoHotkeyx.props" />
   <!-- platform: win32 -->
   <ItemDefinitionGroup Condition="'$(Platform)'=='Win32'">
     <ClCompile>
