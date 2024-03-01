@@ -101,7 +101,7 @@ inline LPTSTR StrToTitleCase(LPTSTR aStr)
 // drop the benchmarks significantly.
 {
 	if (!aStr) return aStr;
-	LPTSTR aStr_orig = aStr;	
+	LPTSTR aStr_orig = aStr;
 	for (bool convert_next_alpha_char_to_upper = true; *aStr; ++aStr)
 	{
 		if (IsCharAlpha(*aStr)) // Use this to better support chars from non-English languages.
@@ -380,7 +380,7 @@ inline LPTSTR strip_quote_marks(LPTSTR aBuf)
 	if (!aBuf || !(*aBuf == '"' || *aBuf == '\''))
 		return aBuf;
 	LPTSTR end = _tcschr(aBuf + 1, '\0');
-	if (end[-1] != *aBuf)
+	if (!end || end[-1] != *aBuf)
 		return aBuf;
 	end[-1] = '\0';
 	return aBuf + 1;
@@ -466,7 +466,7 @@ inline __int64 ATOI64(LPCTSTR buf)
 	//  9223372036854775807+1 == 9223372036854775808
 	//   0xFFFFFFFFFFFFFFFF == -1
 	//  0x10000000000000001 ==  1
-	//return IsHex(buf) ? _tcstoi64(buf, NULL, 16) : _ttoi64(buf);  
+	//return IsHex(buf) ? _tcstoi64(buf, NULL, 16) : _ttoi64(buf);
 	return nstrtoi64(buf);
 }
 
@@ -674,7 +674,7 @@ inline LPTSTR UTF8ToWide(LPCSTR str){
 // is meaningful only to people who use more than one keyboard layout.  In the case of hotstrings:
 // It seems that the vast majority of them would want the Hotstring monitoring to adhere to the active
 // window's current keyboard layout rather than the script's.  This change is somewhat less certain to
-// be desirable unconditionally for the Input command (especially invisible/non-V-option Inputs); but it 
+// be desirable unconditionally for the Input command (especially invisible/non-V-option Inputs); but it
 // seems best to use the same approach to avoid calling ToAsciiEx() more than once in cases where a
 // script has hotstrings and also uses the Input command. Calling ToAsciiEx() twice in such a case would
 // be likely to aggravate its side effects with dead keys as described at length in the hook/Input code).
