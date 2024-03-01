@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CMakeWorkspace" PROJECT_DIR="$PROJECT_DIR$" />
+  <component name="CidrRootsConfiguration">
+    <excludeRoots>
+      <file path="$PROJECT_DIR$/.sarif" />
+      <file path="$PROJECT_DIR$/.vs" />
+      <file path="$PROJECT_DIR$/bin" />
+      <file path="$PROJECT_DIR$/bin_debug" />
+      <file path="$PROJECT_DIR$/build" />
+      <file path="$PROJECT_DIR$/temp" />
+    </excludeRoots>
+  </component>
 </project>
