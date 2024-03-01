@@ -1,15 +1,6 @@
 @echo off
 goto:$Main
 
-:Command
-setlocal EnableDelayedExpansion
-    set "_command=%*"
-    set "_command=!_command:   = !"
-    set "_command=!_command:  = !"
-    echo ##[cmd] !_command!
-    !_command!
-exit /b %errorlevel%
-
 :LogCommand
 setlocal EnableDelayedExpansion
     set "_log=%~1"
@@ -34,5 +25,5 @@ exit /b
 
 :$Main
 setlocal
-    call :Build "%~dp0..\..\"
+    call :Build "%~dp0\"
 endlocal & exit /b %ERRORLEVEL%
