@@ -1,0 +1,73 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: MSBuild
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: AutoHotkeyx.sln
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [x64]
+        config: [Release]
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    name: Check ${{ matrix.platform }} ${{ matrix.config }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore NuGet packages
+        working-directory: ${{ github.workspace }}
+        run: nuget restore ${{ env.SOLUTION_FILE_PATH }}
+
+      - name: Build
+        working-directory: ${{ github.workspace }}
+        run: msbuild /m /p:Configuration="${{matrix.config}}" /p:Platform="${{matrix.platform}}" ${{env.SOLUTION_FILE_PATH}}
+
+  build:
+    needs: check
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [Win32, x64]
+        config:
+          - Debug
+          - Debug.dll
+          - Release
+          - Release.dll
+          - Self-contained
+          - Self-contained(debug)
+        os: [windows-latest]
+    runs-on: ${{ matrix.os }}
+    name: Build ${{ matrix.platform }} ${{ matrix.config }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Restore NuGet packages
+        working-directory: ${{ github.workspace }}
+        run: nuget restore ${{ env.SOLUTION_FILE_PATH }}
+
+      - name: Build
+        working-directory: ${{ github.workspace }}
+        run: msbuild /m /p:Configuration="${{matrix.config}}" /p:Platform="${{matrix.platform}}" ${{env.SOLUTION_FILE_PATH}}
