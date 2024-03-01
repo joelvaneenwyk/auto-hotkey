@@ -10,14 +10,14 @@ language: en
 caseSensitive: false
 dictionaryDefinitions:
   - name: auto-hotkey
-    path: ./config/AutoHotkey-terms.txt
+    path: ./config/auto-hotkey-dictionary.txt
     addWords: true
 dictionaries:
-  - auto-hotkey
   - en_US
-  - cpp
   - softwareTerms
-  - ahk"
+  - cpp
+  - ahk
+  - auto-hotkey
 words: []
 ignoreWords: []
 import: []
