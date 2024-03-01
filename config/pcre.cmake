@@ -97,3 +97,6 @@ set_target_properties(${PROJECT_NAME}
         -DSLJIT_CONFIG_DEBUG=0 -DSLJIT_CONFIG_STATIC=1 \
         -DPC \
 ")
+target_precompile_headers(${PROJECT_NAME} PUBLIC
+    ${PCRE_SOURCE_DIR}/pcre/pcre_internal.h
+)

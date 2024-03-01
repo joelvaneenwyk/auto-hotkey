@@ -131,14 +131,14 @@ set(MIDL_FILE ${AHK_SOURCE_DIR}/ahklib.idl)
 add_custom_command(
     OUTPUT ${MIDL_OUTPUT}/ahklib.tlb ${MIDL_OUTPUT}/ahklib_h.h ${MIDL_OUTPUT}/ahklib_i.c
     COMMAND midl
-        /W1 /nologo
-        /char signed
-        /target "NT60"
-        /env x64
-        /out "${MIDL_OUTPUT}"
-        /h "${MIDL_OUTPUT}/ahklib_h.h"
-        /tlb "${MIDL_OUTPUT}/ahklib.tlb"
-        ${MIDL_FILE}
+    /W1 /nologo
+    /char signed
+    /target "NT60"
+    /env x64
+    /out "${MIDL_OUTPUT}"
+    /h "${MIDL_OUTPUT}/ahklib_h.h"
+    /tlb "${MIDL_OUTPUT}/ahklib.tlb"
+    ${MIDL_FILE}
     WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     DEPENDS ${MIDL_FILE}
     MAIN_DEPENDENCY ${MIDL_FILE}
@@ -163,6 +163,5 @@ set_target_properties(${PROJECT_NAME}
         -DPC \
 ")
 target_precompile_headers(${PROJECT_NAME} PUBLIC
-
+    ${AHK_SOURCE_DIR}/stdafx.h
 )
-target_include_directories(empty PUBLIC include)
