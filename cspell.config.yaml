@@ -1,0 +1,23 @@
+version: "0.2"
+ignorePaths:
+  - bin/
+  - bin_debug/
+  - temp/
+  - "*.svg"
+  - "*.pdb"
+  - "*.obj"
+language: en
+caseSensitive: false
+dictionaryDefinitions:
+  - name: auto-hotkey
+    path: ./config/AutoHotkey-terms.txt
+    addWords: true
+dictionaries:
+  - auto-hotkey
+  - en_US
+  - cpp
+  - softwareTerms
+  - ahk"
+words: []
+ignoreWords: []
+import: []
