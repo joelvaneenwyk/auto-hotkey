@@ -136,7 +136,7 @@
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
-      <PrecompiledHeader Condition="!$(ConfigDebug)">Use</PrecompiledHeader>
+      <PrecompiledHeader>Use</PrecompiledHeader>
       <AdditionalIncludeDirectories>$(ProjectDir)source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
@@ -224,6 +224,7 @@
     <ClCompile Include="source\clipboard.cpp" />
     <ClCompile Include="source\Debugger.cpp">
       <Optimization>MinSpace</Optimization>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\error.cpp" />
     <ClCompile Include="source\globaldata.cpp" />
@@ -234,10 +235,12 @@
     <ClCompile Include="source\lib\CCallback.cpp" />
     <ClCompile Include="source\lib\DllCall.cpp" />
     <ClCompile Include="source\lib\drive.cpp">
-      <Optimization>MinSpace</Optimization>
+      <Optimization Condition="$(ConfigMinSize)">MinSpace</Optimization>
+      <PrecompiledHeader Condition="$(ConfigMinSize)">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\lib\env.cpp">
-      <Optimization>MinSpace</Optimization>
+      <Optimization Condition="$(ConfigMinSize)">MinSpace</Optimization>
+      <PrecompiledHeader Condition="$(ConfigMinSize)">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\lib\file.cpp" />
     <ClCompile Include="source\lib\Gui.ListView.cpp" />
@@ -249,16 +252,19 @@
     <ClCompile Include="source\lib\math.cpp" />
     <ClCompile Include="source\lib\pixel.cpp" />
     <ClCompile Include="source\lib\process.cpp">
-      <Optimization>MinSpace</Optimization>
+      <Optimization Condition="$(ConfigMinSize)">MinSpace</Optimization>
+      <PrecompiledHeader Condition="$(ConfigMinSize)">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\lib\regex.cpp" />
     <ClCompile Include="source\lib\sound.cpp">
-      <Optimization>MinSpace</Optimization>
+      <Optimization Condition="$(ConfigMinSize)">MinSpace</Optimization>
+      <PrecompiledHeader Condition="$(ConfigMinSize)">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\lib\string.cpp" />
     <ClCompile Include="source\lib\vars.cpp" />
     <ClCompile Include="source\lib\wait.cpp">
-      <Optimization>MinSpace</Optimization>
+      <Optimization Condition="$(ConfigMinSize)">MinSpace</Optimization>
+      <PrecompiledHeader Condition="$(ConfigMinSize)">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\lib\win.cpp" />
     <ClCompile Include="source\os_version.cpp" />
@@ -366,7 +372,7 @@
         //X         Execute script in debugger
         //U         Use Unicode for redirected I/O from the console
       -->
-      <Command>&quot;C:\Windows\System32\cscript.exe&quot; //Nologo //E:jscript &quot;$(ProjectDir)source\scripts\minman.wsf&quot; &quot;%(FullPath)&quot; &quot;$(ProjectDir).build\AutoHotkey.exe.manifest&quot;</Command>
+      <Command>"C:\Windows\System32\cscript.exe" //Nologo //E:jscript "$(ProjectDir)source\scripts\minman.wsf" "%(FullPath)" "$(ProjectDir).build\AutoHotkey.exe.manifest"</Command>
       <Outputs>$(ProjectDir).build\AutoHotkey.exe.manifest</Outputs>
       <SubType>Designer</SubType>
     </CustomBuild>

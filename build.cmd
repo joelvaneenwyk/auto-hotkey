@@ -20,10 +20,10 @@ exit /b %errorlevel%
         "%root%\source\scripts\vsdev.cmd" devenv "%root%\AutoHotkeyx.sln" /Build
     call :LogCommand ^
         "%root%\.build\msbuild_log.txt" ^
-        "%root%\source\scripts\vsdev.cmd" msbuild /m /t:Rebuild /p:Configuration="Release" /p:Platform="x64" "%root%\AutoHotkeyx.sln"
+        "%root%\source\scripts\vsdev.cmd" msbuild /m /t:Rebuild /p:Configuration^="Release" /p:Platform^="x64" "%root%\AutoHotkeyx.sln"
 exit /b
 
 :$Main
-setlocal
+setlocal EnableExtensions
     call :Build "%~dp0\"
 endlocal & exit /b %ERRORLEVEL%

@@ -67,17 +67,6 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
 
-  <!-- minimum size: dynamically-linked crt, favor size over speed -->
-  <ItemDefinitionGroup Condition="$(ConfigMinSize)">
-    <ClCompile>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
-      <Optimization>MinSpace</Optimization>
-    </ClCompile>
-    <Link>
-      <IgnoreSpecificDefaultLibraries>libcmt;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
-    </Link>
-  </ItemDefinitionGroup>
-
   <!-- debug settings, defined last to override things set above -->
   <ItemDefinitionGroup Condition="$(ConfigDebug)">
     <ClCompile>
