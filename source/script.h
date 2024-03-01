@@ -387,7 +387,7 @@ struct CallSite
 	int flags = IT_CALL;
 	int param_count = 0;
 	
-	bool is_variadic() { return flags & EIF_VARIADIC; }
+	bool is_variadic() const { return flags & EIF_VARIADIC; }
 	void is_variadic(bool b) { if (b) flags |= EIF_VARIADIC; else flags &= ~EIF_VARIADIC; }
 	
 	void *operator new(size_t aBytes) {return SimpleHeap::Alloc(aBytes);}
@@ -1948,7 +1948,7 @@ public:
 	ResultType Call(ExprTokenType *aParamValue, int aParamCount, UINT aMsg, UCHAR aMsgType, GuiType *aGui, INT_PTR *aRetVal = NULL); // Used by GUI.
 
 	MsgMonitorStruct& operator[] (const int aIndex) { return mMonitor[aIndex]; }
-	int Count() { return mCount; }
+	int Count() const { return mCount; }
 	BOOL IsMonitoring(UINT aMsg, UCHAR aMsgType = 0);
 	BOOL IsMonitoringGuiMsg();
 	BOOL IsRunning(UINT aMsg, UCHAR aMsgType = 0);
@@ -2768,10 +2768,10 @@ public:
 	FResult get_Margin(int &aRetVal, int &aMargin);
 
 	// See DPIScale() and DPIUnscale() for more details.
-	int Scale(int x) { return mUsesDPIScaling ? DPIScale(x) : x; }
-	int Unscale(int x) { return mUsesDPIScaling ? DPIUnscale(x) : x; }
+	int Scale(int x) const { return mUsesDPIScaling ? DPIScale(x) : x; }
+	int Unscale(int x) const { return mUsesDPIScaling ? DPIUnscale(x) : x; }
 	// The following is a workaround for the "w-1" and "h-1" options:
-	int ScaleSize(int x) { return mUsesDPIScaling && x != -1 ? DPIScale(x) : x; }
+	int ScaleSize(int x) const { return mUsesDPIScaling && x != -1 ? DPIScale(x) : x; }
 
 protected:
 	bool Delete() override;
@@ -2879,7 +2879,7 @@ private:
 		size_t size = 0;
 		const size_t INITIAL_SIZE = 0x1000; // # characters for first allocation. Subsequent Reallocs will grow exponentially.
 		const size_t RESERVED_SPACE = 3; // Allow for a null-terminator and appending "()" for call statements.
-		size_t Capacity() { ASSERT(size); return size - RESERVED_SPACE; }
+		size_t Capacity() const { ASSERT(size); return size - RESERVED_SPACE; }
 		ResultType Expand();
 		ResultType EnsureCapacity(size_t aLength);
 		ResultType Realloc(size_t aNewSize);
@@ -3092,7 +3092,7 @@ public:
 				return mi;
 		return NULL;
 	}
-	UserMenuItem *FindMenuItemBySubmenu(HMENU aSubmenu) // L26: Used by WM_MEASUREITEM/WM_DRAWITEM to find the menu item with an associated submenu. Fixes icons on such items when owner-drawn menus are in use.
+	UserMenuItem *FindMenuItemBySubmenu(HMENU aSubmenu) const // L26: Used by WM_MEASUREITEM/WM_DRAWITEM to find the menu item with an associated submenu. Fixes icons on such items when owner-drawn menus are in use.
 	{
 		UserMenuItem *mi;
 		for (UserMenu *m = mFirstMenu; m; m = m->mNextMenu)
