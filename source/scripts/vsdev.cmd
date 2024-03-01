@@ -71,7 +71,7 @@ endlocal & (
 :$Main
 setlocal EnableDelayedExpansion
     :: Assume build environment is already setup if msbuild can be located
-    where msbuild >nul 2>nul && goto:$MainDone
+    where msbuild >nul 2>nul && goto:$MainCommand
 
     :: Allow the path to vsdevcmd to be provided by our caller
     if exist "%vsdevcmd%" (
@@ -114,13 +114,15 @@ setlocal EnableDelayedExpansion
         set VSCMD_DEBUG=2
         echo Found Visual Studio build tools: "%vsdevcmd%"
         call :Command "%vsdevcmd%"
-        if "%~1"=="" goto:$MainDone
+        goto:$MainCommand
 
+    :$MainCommand
+        if "%~1"=="" goto:$MainDone
         call :Command %*
         goto:$MainDone
 
     :$MainDone
-    set "RETURN_VALUE=%ERRORLEVEL%"
+        set "RETURN_VALUE=%ERRORLEVEL%"
 endlocal & (
     set "PATH=%PATH%"
     exit /b %RETURN_VALUE%
