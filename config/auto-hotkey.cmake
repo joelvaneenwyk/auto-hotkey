@@ -71,7 +71,6 @@ set(AHK_SOURCE_FILES
     ${AHK_SOURCE_DIR}/os_version.cpp
     ${AHK_SOURCE_DIR}/os_version.h
     ${AHK_SOURCE_DIR}/pch.cpp
-    ${AHK_SOURCE_DIR}/pch_min.cpp
     ${AHK_SOURCE_DIR}/qmath.h
     ${AHK_SOURCE_DIR}/script.cpp
     ${AHK_SOURCE_DIR}/script.h
@@ -119,8 +118,8 @@ set(AHK_PROJECT_FILES
     ${AHK_SOURCE_DIR}/LICENSE
     ${AHK_SOURCE_DIR}/README-LIB.md
     ${AHK_SOURCE_DIR}/README.md
-    ${AHK_SOURCE_DIR}/vsc-build-env.cmd
-    ${AHK_SOURCE_DIR}/libx64call/HowToCompile.txt
+    ${AHK_SOURCE_DIR}/source/scripts/vsdev.cmd
+    ${AHK_SOURCE_DIR}/libx64call/README.md
 )
 set(AHK_RESOURCE_FILES
     ${AHK_SOURCE_DIR}/scripts/minman.js
