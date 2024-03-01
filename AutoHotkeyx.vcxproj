@@ -353,8 +353,25 @@
   </ItemGroup>
   <ItemGroup>
     <CustomBuild Include="source\resources\AutoHotkey.exe.manifest">
-      <Command>cscript.exe //NoLogo "$(SolutionDir)source\scripts\minman.js" "%(FullPath)" "$(SolutionDir)temp\AutoHotkey.exe.manifest"</Command>
-      <Outputs>$(SolutionDir)temp\AutoHotkey.exe.manifest</Outputs>
+      <!--
+       Usage: CScript scriptname.extension [option...] [arguments...]
+       Options:
+        //B         Batch mode: Suppresses script errors and prompts from displaying
+        //D         Enable Active Debugging
+        //E:engine  Use engine for executing script
+        //H:CScript Changes the default script host to CScript.exe
+        //H:WScript Changes the default script host to WScript.exe (default)
+        //I         Interactive mode (default, opposite of //B)
+        //Job:xxxx  Execute a WSF job
+        //Logo      Display logo (default)
+        //Nologo    Prevent logo display: No banner will be shown at execution time
+        //S         Save current command line options for this user
+        //T:nn      Time out in seconds:  Maximum time a script is permitted to run
+        //X         Execute script in debugger
+        //U         Use Unicode for redirected I/O from the console
+      -->
+      <Command>call &quot;C:\Windows\System32\cscript.exe&quot; //Nologo //E:jscript &quot;$(ProjectDir)source\scripts\minman.wsf&quot; &quot;%(FullPath)&quot; &quot;$(ProjectDir).build\\$(MSBuildProjectName)\\AutoHotkey.exe.manifest&quot;</Command>
+      <Outputs>$(ProjectDir).build/$(MSBuildProjectName)/AutoHotkey.exe.manifest</Outputs>
       <SubType>Designer</SubType>
     </CustomBuild>
     <None Include="source\resources\icon_filetype.ico" />
