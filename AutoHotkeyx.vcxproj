@@ -123,10 +123,10 @@
   <!-- paths and basic settings -->
   <PropertyGroup>
     <IntDir>$(ProjectDir).build/$(MSBuildProjectName)/$(Platform)/$(Configuration)/</IntDir>
-    <BinDir>$(ProjectDir)/bin/release/</BinDir>
-    <OutDir>$(ProjectDir)/bin/release/</OutDir>
-    <OutDir Condition="$(ConfigDebug)">$(ProjectDir)/bin/debug/</OutDir>
-    <OutDir Condition="$(ConfigMinSize)">$(ProjectDir)/bin/minimal/</OutDir>
+    <BinDir>$(Configuration)</BinDir>
+    <BinDir Condition="$(ConfigDebug)">debug</BinDir>
+    <BinDir Condition="$(ConfigMinSize)">minimal</BinDir>
+    <OutDir>$(ProjectDir)/bin/$(BinDir)/</OutDir>
     <BinSuffixChar Condition="'$(CharacterSet)'=='MultiByte'">A</BinSuffixChar>
     <BinTypeWord>$(CharacterSet)</BinTypeWord>
     <BinTypeWord Condition="'$(CharacterSet)'=='MultiByte'">ANSI</BinTypeWord>
@@ -264,11 +264,6 @@
     <ClCompile Include="source\os_version.cpp" />
     <ClCompile Include="source\pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
-    </ClCompile>
-    <ClCompile Include="source\pch_min.cpp">
-      <PrecompiledHeader>Create</PrecompiledHeader>
-      <Optimization>MinSpace</Optimization>
-      <MultiProcessorCompilation>false</MultiProcessorCompilation>
     </ClCompile>
     <ClCompile Include="source\script.cpp" />
     <ClCompile Include="source\script2.cpp" />
