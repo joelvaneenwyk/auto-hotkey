@@ -548,12 +548,12 @@ struct ResultToken : public ExprTokenType
 		return result = aResult;
 	}
 
-	bool Exited()
+	bool Exited() const
 	{
 		return result == FAIL || result == EARLY_EXIT;
 	}
 
-	ResultType Result()
+	ResultType Result() const
 	{
 		return result;
 	}

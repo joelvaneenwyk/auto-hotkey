@@ -274,7 +274,7 @@ public:
 		return false;
 	}
 
-	bool IsCompletelyDisabled()
+	bool IsCompletelyDisabled() const
 	{
 		if (mHookAction) // Alt tab hotkeys are disabled completely if and only if the parent is disabled.
 			return !mParentEnabled;
