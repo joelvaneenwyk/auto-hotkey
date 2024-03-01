@@ -81,8 +81,9 @@ add_library(${PROJECT_NAME})
 target_sources(${PROJECT_NAME} PRIVATE
     ${AHK_PCRE_COMMON_FILES}
     ${AHK_PCRE_X86_FILES}
-    ${AHK_PCRE_SLJIT_FILES}
-    ${AHK_PCRE_SLJIT_X86_FILES}
+
+    # ${AHK_PCRE_SLJIT_FILES}
+    # ${AHK_PCRE_SLJIT_X86_FILES}
 )
 
 set_target_properties(${PROJECT_NAME}
