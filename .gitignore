@@ -7,6 +7,7 @@ resources/png/
 cmake-build-*/
 build/
 .build/
+out/
 *.suo
 *.user
 *.ncb
