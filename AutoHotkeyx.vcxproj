@@ -371,8 +371,8 @@
         //X         Execute script in debugger
         //U         Use Unicode for redirected I/O from the console
       -->
-      <Command>call &quot;C:\Windows\System32\cscript.exe&quot; //Nologo //E:jscript &quot;$(ProjectDir)source\scripts\minman.wsf&quot; &quot;%(FullPath)&quot; &quot;$(ProjectDir).build\\$(MSBuildProjectName)\\AutoHotkey.exe.manifest&quot;</Command>
-      <Outputs>$(ProjectDir).build/$(MSBuildProjectName)/AutoHotkey.exe.manifest</Outputs>
+      <Command>&quot;C:\Windows\System32\cscript.exe&quot; //Nologo //E:jscript &quot;$(ProjectDir)source\scripts\minman.wsf&quot; &quot;%(FullPath)&quot; &quot;$(ProjectDir).build\AutoHotkey.exe.manifest&quot;</Command>
+      <Outputs>$(ProjectDir).build\AutoHotkey.exe.manifest</Outputs>
       <SubType>Designer</SubType>
     </CustomBuild>
     <None Include="source\resources\icon_filetype.ico" />
