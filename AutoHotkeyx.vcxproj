@@ -223,8 +223,8 @@
     <ClCompile Include="source\MdFunc.cpp" />
     <ClCompile Include="source\clipboard.cpp" />
     <ClCompile Include="source\Debugger.cpp">
-      <Optimization>MinSpace</Optimization>
-      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">NotUsing</PrecompiledHeader>
+      <Optimization Condition="$(ConfigMinSize)">MinSpace</Optimization>
+      <PrecompiledHeader Condition="$(ConfigMinSize)">NotUsing</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="source\error.cpp" />
     <ClCompile Include="source\globaldata.cpp" />
