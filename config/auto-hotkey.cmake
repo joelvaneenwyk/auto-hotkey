@@ -1,24 +1,31 @@
-set(PROJECT_NAME auto_hotkey)
+# #
+# # AutoHotkey
+# #
+
+set(TARGET_NAME auto_hotkey)
 
 set(AHK_SOURCE_DIR ${CMAKE_SOURCE_DIR}/source)
-set(PCRE_SOURCE_DIR ${CMAKE_SOURCE_DIR}/source/lib_pcre)
-
-include_directories(${AHK_SOURCE_DIR})
-include_directories(${AHK_SOURCE_DIR}/lib)
-include_directories(${AHK_SOURCE_DIR}/lib_pcre)
-include_directories(${AHK_SOURCE_DIR}/lib_pcre/pcre)
-include_directories(${AHK_SOURCE_DIR}/lib_pcre/pcre/sljit)
-include_directories(${AHK_SOURCE_DIR}/libx64call)
-include_directories(${AHK_SOURCE_DIR}/resources)
-include_directories(${AHK_SOURCE_DIR}/scripts)
 
 set(AHK_SOURCE_FILES
+    ${AHK_SOURCE_DIR}/ahklib.cpp
+    ${AHK_SOURCE_DIR}/ahklib.idl
+    ${AHK_SOURCE_DIR}/ahkversion.cpp
+    ${AHK_SOURCE_DIR}/application.cpp
+    ${AHK_SOURCE_DIR}/AutoHotkey.cpp
+    ${AHK_SOURCE_DIR}/clipboard.cpp
+    ${AHK_SOURCE_DIR}/cpp.hint
+    ${AHK_SOURCE_DIR}/Debugger.cpp
+    ${AHK_SOURCE_DIR}/error.cpp
+    ${AHK_SOURCE_DIR}/globaldata.cpp
+    ${AHK_SOURCE_DIR}/hook.cpp
+    ${AHK_SOURCE_DIR}/hotkey.cpp
+    ${AHK_SOURCE_DIR}/input_object.cpp
+    ${AHK_SOURCE_DIR}/keyboard_mouse.cpp
     ${AHK_SOURCE_DIR}/lib/CCallback.cpp
     ${AHK_SOURCE_DIR}/lib/DllCall.cpp
     ${AHK_SOURCE_DIR}/lib/drive.cpp
     ${AHK_SOURCE_DIR}/lib/env.cpp
     ${AHK_SOURCE_DIR}/lib/file.cpp
-    ${AHK_SOURCE_DIR}/lib/functions.h
     ${AHK_SOURCE_DIR}/lib/Gui.ListView.cpp
     ${AHK_SOURCE_DIR}/lib/Gui.StatusBar.cpp
     ${AHK_SOURCE_DIR}/lib/Gui.TreeView.cpp
@@ -34,82 +41,75 @@ set(AHK_SOURCE_FILES
     ${AHK_SOURCE_DIR}/lib/vars.cpp
     ${AHK_SOURCE_DIR}/lib/wait.cpp
     ${AHK_SOURCE_DIR}/lib/win.cpp
+    ${AHK_SOURCE_DIR}/MdFunc.cpp
+    ${AHK_SOURCE_DIR}/os_version.cpp
+    ${AHK_SOURCE_DIR}/pch.cpp
+    ${AHK_SOURCE_DIR}/script_autoit.cpp
+    ${AHK_SOURCE_DIR}/script_com.cpp
+    ${AHK_SOURCE_DIR}/script_expression.cpp
+    ${AHK_SOURCE_DIR}/script_gui.cpp
+    ${AHK_SOURCE_DIR}/script_menu.cpp
+    ${AHK_SOURCE_DIR}/script_object_bif.cpp
+    ${AHK_SOURCE_DIR}/script_object.cpp
+    ${AHK_SOURCE_DIR}/script_registry.cpp
+    ${AHK_SOURCE_DIR}/script.cpp
+    ${AHK_SOURCE_DIR}/script2.cpp
+    ${AHK_SOURCE_DIR}/SimpleHeap.cpp
+    ${AHK_SOURCE_DIR}/StringConv.cpp
+    ${AHK_SOURCE_DIR}/TextIO.cpp
+    ${AHK_SOURCE_DIR}/util.cpp
+    ${AHK_SOURCE_DIR}/var.cpp
+    ${AHK_SOURCE_DIR}/window.cpp
+    ${AHK_SOURCE_DIR}/WinGroup.cpp
+)
+
+set(AHK_HEADER_FILES
+    ${AHK_SOURCE_DIR}/lib/functions.h
     ${AHK_SOURCE_DIR}/resources/resource.h
     ${AHK_SOURCE_DIR}/abi.h
-    ${AHK_SOURCE_DIR}/ahklib.cpp
-    ${AHK_SOURCE_DIR}/ahklib.idl
-    ${AHK_SOURCE_DIR}/ahkversion.cpp
     ${AHK_SOURCE_DIR}/ahkversion.h
-    ${AHK_SOURCE_DIR}/application.cpp
     ${AHK_SOURCE_DIR}/application.h
-    ${AHK_SOURCE_DIR}/AutoHotkey.cpp
-    ${AHK_SOURCE_DIR}/clipboard.cpp
     ${AHK_SOURCE_DIR}/clipboard.h
     ${AHK_SOURCE_DIR}/config.h
-    ${AHK_SOURCE_DIR}/cpp.hint
     ${AHK_SOURCE_DIR}/debug.h
-    ${AHK_SOURCE_DIR}/Debugger.cpp
     ${AHK_SOURCE_DIR}/Debugger.h
     ${AHK_SOURCE_DIR}/defines.h
     ${AHK_SOURCE_DIR}/DispObject.h
-    ${AHK_SOURCE_DIR}/error.cpp
-    ${AHK_SOURCE_DIR}/globaldata.cpp
     ${AHK_SOURCE_DIR}/globaldata.h
-    ${AHK_SOURCE_DIR}/hook.cpp
     ${AHK_SOURCE_DIR}/hook.h
-    ${AHK_SOURCE_DIR}/hotkey.cpp
     ${AHK_SOURCE_DIR}/hotkey.h
-    ${AHK_SOURCE_DIR}/input_object.cpp
     ${AHK_SOURCE_DIR}/input_object.h
-    ${AHK_SOURCE_DIR}/keyboard_mouse.cpp
     ${AHK_SOURCE_DIR}/keyboard_mouse.h
     ${AHK_SOURCE_DIR}/KuString.h
     ${AHK_SOURCE_DIR}/map.h
-    ${AHK_SOURCE_DIR}/MdFunc.cpp
     ${AHK_SOURCE_DIR}/MdFunc.h
     ${AHK_SOURCE_DIR}/MdType.h
-    ${AHK_SOURCE_DIR}/os_version.cpp
     ${AHK_SOURCE_DIR}/os_version.h
-    ${AHK_SOURCE_DIR}/pch.cpp
     ${AHK_SOURCE_DIR}/qmath.h
-    ${AHK_SOURCE_DIR}/script.cpp
     ${AHK_SOURCE_DIR}/script.h
-    ${AHK_SOURCE_DIR}/script2.cpp
-    ${AHK_SOURCE_DIR}/script_autoit.cpp
-    ${AHK_SOURCE_DIR}/script_com.cpp
     ${AHK_SOURCE_DIR}/script_com.h
-    ${AHK_SOURCE_DIR}/script_expression.cpp
     ${AHK_SOURCE_DIR}/script_func_impl.h
-    ${AHK_SOURCE_DIR}/script_gui.cpp
-    ${AHK_SOURCE_DIR}/script_menu.cpp
-    ${AHK_SOURCE_DIR}/script_object.cpp
     ${AHK_SOURCE_DIR}/script_object.h
-    ${AHK_SOURCE_DIR}/script_object_bif.cpp
-    ${AHK_SOURCE_DIR}/script_registry.cpp
-    ${AHK_SOURCE_DIR}/SimpleHeap.cpp
     ${AHK_SOURCE_DIR}/SimpleHeap.h
     ${AHK_SOURCE_DIR}/stdafx.h
-    ${AHK_SOURCE_DIR}/StringConv.cpp
     ${AHK_SOURCE_DIR}/StringConv.h
     ${AHK_SOURCE_DIR}/StrRet.h
-    ${AHK_SOURCE_DIR}/TextIO.cpp
     ${AHK_SOURCE_DIR}/TextIO.h
-    ${AHK_SOURCE_DIR}/util.cpp
     ${AHK_SOURCE_DIR}/util.h
-    ${AHK_SOURCE_DIR}/var.cpp
     ${AHK_SOURCE_DIR}/var.h
-    ${AHK_SOURCE_DIR}/window.cpp
     ${AHK_SOURCE_DIR}/window.h
-    ${AHK_SOURCE_DIR}/WinGroup.cpp
     ${AHK_SOURCE_DIR}/WinGroup.h
 )
+
 set(AHK_X86_SOURCE_FILES
     ${AHK_SOURCE_DIR}/x86call.asm
 )
+
 set(AHK_X64_SOURCE_FILES
     ${AHK_SOURCE_DIR}/libx64call/x64call.asm
     ${AHK_SOURCE_DIR}/libx64call/x64stub.asm
 )
+
 set(AHK_PROJECT_FILES
     ${AHK_SOURCE_DIR}/.gitattributes
     ${AHK_SOURCE_DIR}/.gitignore
@@ -121,6 +121,7 @@ set(AHK_PROJECT_FILES
     ${AHK_SOURCE_DIR}/source/scripts/vsdev.cmd
     ${AHK_SOURCE_DIR}/libx64call/README.md
 )
+
 set(AHK_RESOURCE_FILES
     ${AHK_SOURCE_DIR}/scripts/minman.js
 )
@@ -144,13 +145,36 @@ add_custom_command(
     VERBATIM
 )
 
-add_executable(${PROJECT_NAME})
-target_sources(${PROJECT_NAME} PRIVATE
+enable_language(CXX)
+add_executable(${TARGET_NAME}
     ${MIDL_FILE}
     ${MIDL_OUTPUT}/ahklib.tlb ${MIDL_OUTPUT}/ahklib_h.h ${MIDL_OUTPUT}/ahklib_i.c
-    ${AHK_SOURCE_FILES})
+    ${AHK_SOURCE_FILES}
+)
 
-set_target_properties(${PROJECT_NAME}
+# Just for example add some compiler flags.
+target_compile_options(${TARGET_NAME} PUBLIC /std:c++17)
+
+# This allows to include files relative to the root of the src directory with a <> pair
+target_include_directories(${TARGET_NAME} PUBLIC
+    ${AHK_SOURCE_DIR}
+)
+target_include_directories(${TARGET_NAME} PRIVATE
+    ${AHK_SOURCE_DIR}/lib
+    ${AHK_SOURCE_DIR}/lib_pcre
+    ${AHK_SOURCE_DIR}/lib_pcre/pcre
+    ${AHK_SOURCE_DIR}/lib_pcre/pcre/sljit
+    ${AHK_SOURCE_DIR}/libx64call
+    ${AHK_SOURCE_DIR}/resources
+    ${AHK_SOURCE_DIR}/scripts)
+
+target_compile_features(${TARGET_NAME}
+    PUBLIC
+    cxx_std_20
+)
+target_link_libraries(${TARGET_NAME}
+    lib_pcre)
+set_target_properties(${TARGET_NAME}
     PROPERTIES COMPILE_FLAGS "\
         -DHAVE_CONFIG_H=1 -DUNICODE -D_UNICODE \
         -DLINK_SIZE=4 -DSLJIT_INLINE=inline -DSLJIT_CONFIG_AUTO=1 \
@@ -161,6 +185,7 @@ set_target_properties(${PROJECT_NAME}
         -DSLJIT_CONFIG_DEBUG=0 -DSLJIT_CONFIG_STATIC=1 \
         -DPC \
 ")
-target_precompile_headers(${PROJECT_NAME} PUBLIC
-    ${AHK_SOURCE_DIR}/stdafx.h
-)
+
+# target_precompile_headers(${TARGET_NAME} PUBLIC
+# ${AHK_SOURCE_DIR}/stdafx.h
+# )

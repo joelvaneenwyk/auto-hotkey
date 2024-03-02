@@ -1,16 +1,11 @@
-set(PROJECT_NAME lib_pcre)
+##
+## AutoHotkey // PCRE
+##
+
+set(TARGET_NAME lib_pcre)
 
 set(AHK_SOURCE_DIR ${CMAKE_SOURCE_DIR}/source)
 set(PCRE_SOURCE_DIR ${CMAKE_SOURCE_DIR}/source/lib_pcre)
-
-include_directories(${AHK_SOURCE_DIR})
-include_directories(${AHK_SOURCE_DIR}/lib)
-include_directories(${AHK_SOURCE_DIR}/lib_pcre)
-include_directories(${AHK_SOURCE_DIR}/lib_pcre/pcre)
-include_directories(${AHK_SOURCE_DIR}/lib_pcre/pcre/sljit)
-include_directories(${AHK_SOURCE_DIR}/libx64call)
-include_directories(${AHK_SOURCE_DIR}/resources)
-include_directories(${AHK_SOURCE_DIR}/scripts)
 
 set(AHK_PCRE_COMMON_FILES
     ${PCRE_SOURCE_DIR}/pcre/config.h
@@ -76,9 +71,7 @@ set(AHK_PCRE_SLJIT_X86_FILES
 set(AHK_PCRE_SLJIT_X64_FILES
     ${PCRE_SOURCE_DIR}/pcre/sljit/sljitNativeX86_64.c
 )
-
-add_library(${PROJECT_NAME})
-target_sources(${PROJECT_NAME} PRIVATE
+set(AHK_PCRE_SOURCES
     ${AHK_PCRE_COMMON_FILES}
     ${AHK_PCRE_X86_FILES}
 
@@ -86,7 +79,12 @@ target_sources(${PROJECT_NAME} PRIVATE
     # ${AHK_PCRE_SLJIT_X86_FILES}
 )
 
-set_target_properties(${PROJECT_NAME}
+add_library(${TARGET_NAME})
+target_sources(${TARGET_NAME} PRIVATE
+    ${AHK_PCRE_SOURCES}
+)
+
+set_target_properties(${TARGET_NAME}
     PROPERTIES COMPILE_FLAGS "\
         -DHAVE_CONFIG_H=1 -DUNICODE -D_UNICODE \
         -DLINK_SIZE=4 -DSLJIT_INLINE=inline -DSLJIT_CONFIG_AUTO=1 \
@@ -97,6 +95,17 @@ set_target_properties(${PROJECT_NAME}
         -DSLJIT_CONFIG_DEBUG=0 -DSLJIT_CONFIG_STATIC=1 \
         -DPC \
 ")
-target_precompile_headers(${PROJECT_NAME} PUBLIC
-    ${PCRE_SOURCE_DIR}/pcre/pcre_internal.h
-)
+target_include_directories(${TARGET_NAME} PRIVATE
+    ${AHK_SOURCE_DIR}
+    ${AHK_SOURCE_DIR}/lib
+    ${AHK_SOURCE_DIR}/lib_pcre
+    ${AHK_SOURCE_DIR}/lib_pcre/pcre
+    ${AHK_SOURCE_DIR}/lib_pcre/pcre/sljit
+    ${AHK_SOURCE_DIR}/libx64call
+    ${AHK_SOURCE_DIR}/resources
+    ${AHK_SOURCE_DIR}/scripts)
+
+#
+# Precompiled headers are not setup for PCRE library in Visual Studio project either so
+# we do not enable it here to maintain consistency.
+#
