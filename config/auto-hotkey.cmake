@@ -183,7 +183,6 @@ set_target_properties(${TARGET_NAME}
         -DSLJIT_CONFIG_DEBUG=0 -DSLJIT_CONFIG_STATIC=1 \
         -DPC \
 ")
-target_link_options(${TARGET_NAME} PRIVATE /NODEFAULTLIB:MSVCRT)
 target_include_directories(${TARGET_NAME} PUBLIC ${AHK_SOURCE_DIR})
 target_include_directories(${TARGET_NAME} PRIVATE
     ${AHK_SOURCE_DIR}
@@ -206,5 +205,4 @@ target_link_libraries(${TARGET_NAME}
     uxtheme
     dwmapi
 )
-
-# target_precompile_headers(${TARGET_NAME} PRIVATE source/stdafx.h)
+target_precompile_headers(${TARGET_NAME} PRIVATE "$<$<COMPILE_LANGUAGE:CXX>:${CMAKE_SOURCE_DIR}/source/stdafx.h>")
