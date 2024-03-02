@@ -31,7 +31,7 @@ env:
 jobs:
   analyze:
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         language: ["c-cpp"]
         config: [Release, Debug]
@@ -72,9 +72,7 @@ jobs:
 
       - name: Build
         working-directory: ${{ github.workspace }}
-        # Add additional options to the MSBuild command line here (like platform or verbosity level).
-        # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-        run: msbuild /m /p:Configuration="${{matrix.config}}" "${{env.SOLUTION_FILE_PATH}}"
+        run: msbuild /m /p:Configuration="${{matrix.config}}" /p:Platform="${{matrix.platform}}" ${{env.SOLUTION_FILE_PATH}}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
