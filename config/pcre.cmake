@@ -13,7 +13,7 @@ set(AHK_PCRE_COMMON_FILES
     ${PCRE_SOURCE_DIR}/pcre/pcret.h
     ${PCRE_SOURCE_DIR}/pcre/ucp.h
 )
-set(AHK_PCRE_X86_FILES
+set(AHK_PCRE_8BIT_FILES
     ${PCRE_SOURCE_DIR}/pcre/pcre_chartables.c
     ${PCRE_SOURCE_DIR}/pcre/pcre_compile.c
     ${PCRE_SOURCE_DIR}/pcre/pcre_config.c
@@ -36,7 +36,7 @@ set(AHK_PCRE_X86_FILES
     ${PCRE_SOURCE_DIR}/pcre/pcre_version.c
     ${PCRE_SOURCE_DIR}/pcre/pcre_xclass.c
 )
-set(AHK_PCRE_X64_FILES
+set(AHK_PCRE_16BIT_FILES
     ${PCRE_SOURCE_DIR}/pcre/pcre16_chartables.c
     ${PCRE_SOURCE_DIR}/pcre/pcre16_compile.c
     ${PCRE_SOURCE_DIR}/pcre/pcre16_config.c
@@ -73,7 +73,8 @@ set(AHK_PCRE_SLJIT_X64_FILES
 )
 set(AHK_PCRE_SOURCES
     ${AHK_PCRE_COMMON_FILES}
-    ${AHK_PCRE_X86_FILES}
+    ${AHK_PCRE_8BIT_FILES}
+    ${AHK_PCRE_16BIT_FILES}
 
     # ${AHK_PCRE_SLJIT_FILES}
     # ${AHK_PCRE_SLJIT_X86_FILES}

@@ -6,7 +6,7 @@ set(TARGET_NAME auto_hotkey)
 
 set(AHK_SOURCE_DIR ${CMAKE_SOURCE_DIR}/source)
 
-set(AHK_SOURCE_FILES
+set(AHK_COMMON_SOURCE_FILES
     ${AHK_SOURCE_DIR}/ahklib.cpp
     ${AHK_SOURCE_DIR}/ahklib.idl
     ${AHK_SOURCE_DIR}/ahkversion.cpp
@@ -145,12 +145,30 @@ add_custom_command(
     VERBATIM
 )
 
-enable_language(CXX)
-add_executable(${TARGET_NAME}
+set(AHK_SOURCE_FILES
     ${MIDL_FILE}
     ${MIDL_OUTPUT}/ahklib.tlb ${MIDL_OUTPUT}/ahklib_h.h ${MIDL_OUTPUT}/ahklib_i.c
+    ${AHK_X64_SOURCE_FILES}
+    ${AHK_COMMON_SOURCE_FILES}
+)
+
+set(SAVED_LINKER_FLAGS ${CMAKE_STATIC_LINKER_FLAGS})
+set(CMAKE_STATIC_LINKER_FLAGS "")
+if (WIN32)
+	set(CMAKE_AR lib.exe)
+	set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreaded         "")
+	set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDLL      "")
+	set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDebug    "")
+	set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDebugDLL "")
+	set(CMAKE_ASM_MASM_CREATE_STATIC_LIBRARY "<CMAKE_AR> /OUT:<TARGET> <LINK_FLAGS> <OBJECTS>")
+endif()
+set(CMAKE_STATIC_LINKER_FLAGS ${SAVED_LINKER_FLAGS})
+
+enable_language(CXX)
+add_executable(${TARGET_NAME}
     ${AHK_SOURCE_FILES}
 )
+set_source_files_properties(${AHK_X64_SOURCE_FILES} PROPERTY LANGUAGE ASM_MASM)
 
 # Just for example add some compiler flags.
 target_compile_options(${TARGET_NAME} PUBLIC /std:c++17)
@@ -170,7 +188,7 @@ target_include_directories(${TARGET_NAME} PRIVATE
 
 target_compile_features(${TARGET_NAME}
     PUBLIC
-    cxx_std_20
+    cxx_std_17
 )
 target_link_libraries(${TARGET_NAME}
     lib_pcre
@@ -195,7 +213,7 @@ set_target_properties(${TARGET_NAME}
         -DSLJIT_CONFIG_DEBUG=0 -DSLJIT_CONFIG_STATIC=1 \
         -DPC \
 ")
-
+# target_link_options(${TARGET_NAME} "/NODEFAULTLIB:msvcrt")
 # target_precompile_headers(${TARGET_NAME} PUBLIC
 # ${AHK_SOURCE_DIR}/stdafx.h
 # )
