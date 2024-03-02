@@ -13,6 +13,7 @@ freely, without restriction.
 */
 
 #include "stdafx.h"
+
 #include "globaldata.h"
 #include "DispObject.h"
 #include "script_com.h"
@@ -78,7 +79,7 @@ public:
 	}
 
 	STDMETHODIMP Next(ULONG celt, /*out*/ VARIANT *rgVar, /*out*/ ULONG *pCeltFetched) = 0;
-	
+
 	STDMETHODIMP Skip(ULONG celt) { return E_NOTIMPL; }
 	STDMETHODIMP Reset() { return E_NOTIMPL; }
 	STDMETHODIMP Clone(/*out*/ IEnumVARIANT **ppEnum) { return E_NOTIMPL; }
@@ -100,14 +101,25 @@ public:
 		static_cast<DescribeFunc*>(*ppDisp)->mFunc = func;
 		return S_OK;
 	}
-	
+
 	STDMETHODIMP_(BSTR) get_Name() { return SysAllocString(mFunc->mName); }
 
+	STDMETHODIMP_(BSTR) get_File() {
 #ifdef CONFIG_DLL
-	STDMETHODIMP_(BSTR) get_File() { return SysAllocString(Line::sSourceFile[mFunc->mFileIndex]); }
-	STDMETHODIMP_(UINT) get_Line() { return mFunc->mLineNumber; }
+		return SysAllocString(Line::sSourceFile[mFunc->mFileIndex]);
+#else
+		return nullptr;
 #endif
-	
+}
+
+	STDMETHODIMP_(UINT) get_Line() {
+#ifdef CONFIG_DLL
+		return mFunc->mLineNumber;
+#else
+		return 0U;
+#endif
+	}
+
 	STDMETHODIMP_(UINT) get_EndLine();
 	STDMETHODIMP_(BOOL) get_IsBuiltIn() { return mFunc->IsBuiltIn(); }
 	STDMETHODIMP_(BOOL) get_IsVariadic() { return mFunc->mIsVariadic; }
@@ -127,6 +139,7 @@ public:
 
 	STDMETHODIMP Next(ULONG celt, /*out*/ VARIANT *rgVar, /*out*/ ULONG *pCeltFetched)
 	{
+#ifdef CONFIG_DLL
 		ULONG i;
 		for (i = 0; i < celt && mIndex < (ULONG)g_script.mFuncs.mCount; ++i, ++mIndex)
 		{
@@ -142,6 +155,9 @@ public:
 		if (pCeltFetched)
 			*pCeltFetched = i;
 		return i < celt ? S_FALSE : S_OK;
+#else
+		return S_FALSE;
+#endif
 	}
 };
 
@@ -164,7 +180,9 @@ public:
 
 	STDMETHODIMP get_Count(int *pCount)
 	{
+#ifdef CONFIG_DLL
 		*pCount = g_script.mFuncs.mCount;
+#endif
 		return S_OK;
 	}
 
@@ -450,10 +468,24 @@ public:
 		static_cast<DescribeLabel*>(*ppDisp)->mLabel = label;
 		return S_OK;
 	}
-	
+
 	STDMETHODIMP_(BSTR) get_Name() { return SysAllocString(mLabel->mName); }
-	STDMETHODIMP_(BSTR) get_File() { return SysAllocString(Line::sSourceFile[mLabel->mFileIndex]); }
-	STDMETHODIMP_(UINT) get_Line() { return mLabel->mLineNumber; }
+
+	STDMETHODIMP_(BSTR) get_File() {
+#ifdef CONFIG_DLL
+		return SysAllocString(Line::sSourceFile[mLabel->mFileIndex]);
+#else
+		return nullptr;
+#endif
+	}
+
+	STDMETHODIMP_(UINT) get_Line() { 
+#ifdef CONFIG_DLL
+		return mLabel->mLineNumber;
+#else
+		return 0U;
+#endif
+	}
 };
 
 
@@ -462,7 +494,14 @@ class EnumLabels : public EnumVARIANT
 	Label *mCurrLabel;
 
 public:
-	EnumLabels() : EnumVARIANT(), mCurrLabel(g_script.mFirstLabel) {}
+	EnumLabels() 
+		: EnumVARIANT()
+#ifdef CONFIG_DLL
+		, mCurrLabel(g_script.mFirstLabel) 
+#else
+		, mCurrLabel(nullptr)
+#endif
+	{}
 
 	STDMETHODIMP Next(ULONG celt, /*out*/ VARIANT *rgVar, /*out*/ ULONG *pCeltFetched)
 	{
@@ -503,7 +542,9 @@ public:
 
 	STDMETHODIMP get_Count(int *pCount)
 	{
+#ifdef CONFIG_DLL
 		*pCount = g_script.mLabelCount;
+#endif
 		return S_OK;
 	}
 
@@ -632,7 +673,11 @@ public:
 
 	STDMETHODIMP get_Vars(IDispatch **ppVars)
 	{
+#ifdef CONFIG_DLL
 		return VarCollection::Create(&g_script.mVars, ppVars);
+#else
+		return S_FALSE;
+#endif
 	}
 
 	STDMETHODIMP get_Labels(IDispatch **ppLabels)
@@ -671,6 +716,7 @@ bool LibNotifyProblem(ExprTokenType &aProblem)
 
 bool LibNotifyProblem(LPCTSTR aMessage, LPCTSTR aExtra, Line *aLine, bool aWarn)
 {
+#ifdef CONFIG_DLL
 	if (!lib_ProblemCallback)
 		return false;
 	static Line sLine(0, 0, ACT_EXPRESSION, nullptr, 0);
@@ -684,6 +730,9 @@ bool LibNotifyProblem(LPCTSTR aMessage, LPCTSTR aExtra, Line *aLine, bool aWarn)
 	auto result = LibNotifyProblem(ExprTokenType(obj));
 	obj->Release();
 	return result;
+#else
+	return false;
+#endif
 }
 
 
@@ -695,8 +744,8 @@ AHKAPI(HRESULT) Host(IDispatch **ppLib)
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
-	switch( fdwReason ) 
-	{ 
+	switch( fdwReason )
+	{
 	case DLL_PROCESS_ATTACH:
 		g_hInstance = hinstDLL;
 		break;
