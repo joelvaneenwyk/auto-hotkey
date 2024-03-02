@@ -21,9 +21,9 @@ protected:
 #ifdef _WIN64
 	// Used by Object, but defined here on (x64 builds only) to utilize the space
 	// that would otherwise just be padding, due to alignment requirements.
-	UINT mFlags; 
+	UINT mFlags;
 #endif
-	
+
 	virtual bool Delete()
 	{
 		delete this; // Derived classes MUST be instantiated with 'new' or override this function.
@@ -138,7 +138,7 @@ class FlatVector
 		index_t length;
 	};
 	Data *data;
-	
+
 	struct OneT : public Data { char zero_buf[sizeof(T)]; }; // zero_buf guarantees zero-termination when used for strings (fixes an issue observed in debug mode).
 	static OneT Empty;
 
@@ -152,7 +152,7 @@ class FlatVector
 public:
 	FlatVector<T, index_t>() { data = &Empty; }
 	~FlatVector<T, index_t>() { Free(); }
-	
+
 	void Free()
 	{
 		if (data->size)
@@ -306,8 +306,8 @@ protected:
 		void ReturnRef(ResultToken &result);
 		void ReturnMove(ResultToken &result);
 		void Free();
-	
-		inline void ToToken(ExprTokenType &aToken); // Used when we want the value as is, in a token.  Does not AddRef() or copy strings.
+
+		void ToToken(ExprTokenType &aToken); // Used when we want the value as is, in a token.  Does not AddRef() or copy strings.
 	};
 
 	struct FieldType : Variant
@@ -365,7 +365,7 @@ private:
 		index_t insert_pos;
 		return FindField(name, insert_pos);
 	}
-	
+
 	FieldType *Insert(name_t name, index_t at);
 
 	bool SetInternalCapacity(index_t new_capacity);
@@ -374,7 +374,7 @@ private:
 	{
 		return SetInternalCapacity(mFields.Capacity() ? mFields.Capacity() * 2 : 4);
 	}
-	
+
 	StructInfo *GetStructInfo(bool aDefine = false);
 
 protected:
@@ -437,13 +437,13 @@ public:
 		field->ToToken(aToken);
 		return true;
 	}
-	
+
 	IObject *GetOwnPropObj(name_t aName)
 	{
 		auto field = FindField(aName);
 		return field && field->symbol == SYM_OBJECT ? field->object : nullptr;
 	}
-	
+
 	IObject *GetOwnPropMethod(name_t name)
 	{
 		auto field = FindField(name);
@@ -475,17 +475,17 @@ public:
 		if (field)
 			mFields.Remove((index_t)(field - mFields), 1);
 	}
-	
+
 	Property *DefineProperty(name_t aName);
 	TypedProperty *DefineTypedProperty(name_t aName);
 	FResult DefineTypedProperty(name_t aName, MdType aType, Object *aClass, size_t aCount);
 	bool DefineMethod(name_t aName, IObject *aFunc);
 	void DefineClass(name_t aName, Object *aClass);
-	
+
 	bool CanSetBase(Object *aNewBase);
 	ResultType SetBase(Object *aNewBase, ResultToken &aResultToken);
 	void SetBase(Object *aNewBase)
-	{ 
+	{
 		if (aNewBase)
 			aNewBase->AddRef();
 		if (mBase)
@@ -497,7 +497,7 @@ public:
 	bool IsNativeClassPrototype() { return mFlags & NativeClassPrototype; }
 
 	Object *GetNativeBase();
-	Object *Base() 
+	Object *Base()
 	{
 		return mBase; // Callers only want to call Invoke(), so no AddRef is done.
 	}
@@ -509,7 +509,7 @@ public:
 	void EndClassDefinition();
 	void RemoveMissingProperties();
 	Object *GetUnresolvedClass(LPTSTR &aName);
-	
+
 	ResultType Invoke(IObject_Invoke_PARAMS_DECL);
 
 	static ObjectMember sMembers[];
@@ -593,7 +593,7 @@ private:
 	index_t ParamToZeroIndex(ExprTokenType &aParam);
 
 	Array() {}
-	
+
 public:
 	enum : index_t
 	{
@@ -603,7 +603,7 @@ public:
 
 	index_t Length() { return mLength; }
 	index_t Capacity() { return mCapacity; }
-	
+
 	ResultType SetLength(index_t aNewLength);
 
 	template<typename TokenT>
@@ -694,10 +694,10 @@ class Map : public Object
 		Clear();
 		free(mItem);
 	}
-	 
+
 	Pair *FindItem(LPTSTR val, index_t left, index_t right, index_t &insert_pos);
 	Pair *FindItem(IntKeyType val, index_t left, index_t right, index_t &insert_pos);
-	Pair *FindItem(SymbolType key_type, Key key, index_t &insert_pos);	
+	Pair *FindItem(SymbolType key_type, Key key, index_t &insert_pos);
 	Pair *FindItem(ExprTokenType &key_token, LPTSTR aBuf, SymbolType &key_type, Key &key, index_t &insert_pos);
 
 	void ConvertKey(ExprTokenType &key_token, LPTSTR buf, SymbolType &key_type, Key &key);
@@ -705,7 +705,7 @@ class Map : public Object
 	Pair *Insert(SymbolType key_type, Key key, index_t at);
 
 	bool SetInternalCapacity(index_t new_capacity);
-	
+
 	// Expands mItem by at least one field.
 	bool Expand()
 	{
@@ -806,7 +806,7 @@ class RegExMatchObject : public Object
 	ResultType GetEnumItem(UINT &aIndex, Var *, Var *, int);
 
 	RegExMatchObject() : mHaystack(NULL), mOffset(NULL), mPatternName(NULL), mPatternCount(0), mMark(NULL) {}
-	
+
 	~RegExMatchObject()
 	{
 		if (mHaystack)
@@ -829,7 +829,7 @@ class RegExMatchObject : public Object
 public:
 	static ResultType Create(LPCTSTR aHaystack, int *aOffset, LPCTSTR *aPatternName
 		, int aPatternCount, int aCapturedPatternCount, LPCTSTR aMark, IObject *&aNewObject);
-	
+
 	enum MemberID
 	{
 		M___Get,
