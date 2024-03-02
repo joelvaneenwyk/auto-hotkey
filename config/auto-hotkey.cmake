@@ -154,14 +154,16 @@ set(AHK_SOURCE_FILES
 
 set(SAVED_LINKER_FLAGS ${CMAKE_STATIC_LINKER_FLAGS})
 set(CMAKE_STATIC_LINKER_FLAGS "")
-if (WIN32)
-	set(CMAKE_AR lib.exe)
-	set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreaded         "")
-	set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDLL      "")
-	set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDebug    "")
-	set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDebugDLL "")
-	set(CMAKE_ASM_MASM_CREATE_STATIC_LIBRARY "<CMAKE_AR> /OUT:<TARGET> <LINK_FLAGS> <OBJECTS>")
+
+if(WIN32)
+    set(CMAKE_AR lib.exe)
+    set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreaded "")
+    set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDLL "")
+    set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDebug "")
+    set(CMAKE_ASM_MASM_COMPILE_OPTIONS_MSVC_RUNTIME_LIBRARY_MultiThreadedDebugDLL "")
+    set(CMAKE_ASM_MASM_CREATE_STATIC_LIBRARY "<CMAKE_AR> /OUT:<TARGET> <LINK_FLAGS> <OBJECTS>")
 endif()
+
 set(CMAKE_STATIC_LINKER_FLAGS ${SAVED_LINKER_FLAGS})
 
 enable_language(CXX)
@@ -169,14 +171,20 @@ add_executable(${TARGET_NAME}
     ${AHK_SOURCE_FILES}
 )
 set_source_files_properties(${AHK_X64_SOURCE_FILES} PROPERTY LANGUAGE ASM_MASM)
-
-# Just for example add some compiler flags.
-target_compile_options(${TARGET_NAME} PUBLIC /std:c++17)
-
-# This allows to include files relative to the root of the src directory with a <> pair
-target_include_directories(${TARGET_NAME} PUBLIC
-    ${AHK_SOURCE_DIR}
-)
+target_compile_features(${TARGET_NAME} PUBLIC cxx_std_17)
+set_target_properties(${TARGET_NAME}
+    PROPERTIES COMPILE_FLAGS "\
+        -DHAVE_CONFIG_H=1 -DUNICODE -D_UNICODE \
+        -DLINK_SIZE=4 -DSLJIT_INLINE=inline -DSLJIT_CONFIG_AUTO=1 \
+        -DSLJIT_VERBOSE=0 -DSLJIT_DEBUG=0 -DSLJIT_CONFIG_X86_64=1 \
+        -DSLJIT_CONFIG_AUTO=0 -DLINK_SIZE=4 -DSLJIT_VERBOSE=0 -DSLJIT_DEBUG=0 \
+        -DSLJIT_CONFIG_X86=0 -DSLJIT_CONFIG_X86_32=0 -DSLJIT_CONFIG_X86_64=1 \
+        -DSLJIT_CONFIG_UNSUPPORTED=0 \
+        -DSLJIT_CONFIG_DEBUG=0 -DSLJIT_CONFIG_STATIC=1 \
+        -DPC \
+")
+target_link_options(${TARGET_NAME} PRIVATE /NODEFAULTLIB:LIBCMT)
+target_include_directories(${TARGET_NAME} PUBLIC ${AHK_SOURCE_DIR})
 target_include_directories(${TARGET_NAME} PRIVATE
     ${AHK_SOURCE_DIR}/lib
     ${AHK_SOURCE_DIR}/lib_pcre
@@ -185,11 +193,6 @@ target_include_directories(${TARGET_NAME} PRIVATE
     ${AHK_SOURCE_DIR}/libx64call
     ${AHK_SOURCE_DIR}/resources
     ${AHK_SOURCE_DIR}/scripts)
-
-target_compile_features(${TARGET_NAME}
-    PUBLIC
-    cxx_std_17
-)
 target_link_libraries(${TARGET_NAME}
     lib_pcre
     wsock32
@@ -202,17 +205,7 @@ target_link_libraries(${TARGET_NAME}
     uxtheme
     dwmapi
 )
-set_target_properties(${TARGET_NAME}
-    PROPERTIES COMPILE_FLAGS "\
-        -DHAVE_CONFIG_H=1 -DUNICODE -D_UNICODE \
-        -DLINK_SIZE=4 -DSLJIT_INLINE=inline -DSLJIT_CONFIG_AUTO=1 \
-        -DSLJIT_VERBOSE=0 -DSLJIT_DEBUG=0 -DSLJIT_CONFIG_X86_64=1 \
-        -DSLJIT_CONFIG_AUTO=0 -DLINK_SIZE=4 -DSLJIT_VERBOSE=0 -DSLJIT_DEBUG=0 \
-        -DSLJIT_CONFIG_X86=0 -DSLJIT_CONFIG_X86_32=0 -DSLJIT_CONFIG_X86_64=1 \
-        -DSLJIT_CONFIG_UNSUPPORTED=0 \
-        -DSLJIT_CONFIG_DEBUG=0 -DSLJIT_CONFIG_STATIC=1 \
-        -DPC \
-")
+
 # target_link_options(${TARGET_NAME} "/NODEFAULTLIB:msvcrt")
 # target_precompile_headers(${TARGET_NAME} PUBLIC
 # ${AHK_SOURCE_DIR}/stdafx.h
