@@ -167,7 +167,7 @@ endif()
 set(CMAKE_STATIC_LINKER_FLAGS ${SAVED_LINKER_FLAGS})
 
 enable_language(CXX)
-add_executable(${TARGET_NAME}
+add_executable(${TARGET_NAME} WIN32
     ${AHK_SOURCE_FILES}
 )
 set_source_files_properties(${AHK_X64_SOURCE_FILES} PROPERTY LANGUAGE ASM_MASM)
@@ -183,9 +183,10 @@ set_target_properties(${TARGET_NAME}
         -DSLJIT_CONFIG_DEBUG=0 -DSLJIT_CONFIG_STATIC=1 \
         -DPC \
 ")
-target_link_options(${TARGET_NAME} PRIVATE /NODEFAULTLIB:LIBCMT)
+target_link_options(${TARGET_NAME} PRIVATE /NODEFAULTLIB:MSVCRT)
 target_include_directories(${TARGET_NAME} PUBLIC ${AHK_SOURCE_DIR})
 target_include_directories(${TARGET_NAME} PRIVATE
+    ${AHK_SOURCE_DIR}
     ${AHK_SOURCE_DIR}/lib
     ${AHK_SOURCE_DIR}/lib_pcre
     ${AHK_SOURCE_DIR}/lib_pcre/pcre
@@ -206,7 +207,4 @@ target_link_libraries(${TARGET_NAME}
     dwmapi
 )
 
-# target_link_options(${TARGET_NAME} "/NODEFAULTLIB:msvcrt")
-# target_precompile_headers(${TARGET_NAME} PUBLIC
-# ${AHK_SOURCE_DIR}/stdafx.h
-# )
+# target_precompile_headers(${TARGET_NAME} PRIVATE source/stdafx.h)

@@ -1,8 +1,7 @@
 cmake_minimum_required(VERSION 3.27)
-project(AutoHotkey C CXX ASM)
+project(AutoHotkey)
 
-enable_language(C CXX ASM_MASM)
-
+enable_language(CXX ASM_MASM)
 include(config/pcre.cmake)
 include(config/auto-hotkey.cmake)
 
