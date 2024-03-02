@@ -173,7 +173,17 @@ target_compile_features(${TARGET_NAME}
     cxx_std_20
 )
 target_link_libraries(${TARGET_NAME}
-    lib_pcre)
+    lib_pcre
+    wsock32
+    winmm
+    version
+    comctl32
+    psapi
+    wininet
+    shlwapi
+    uxtheme
+    dwmapi
+)
 set_target_properties(${TARGET_NAME}
     PROPERTIES COMPILE_FLAGS "\
         -DHAVE_CONFIG_H=1 -DUNICODE -D_UNICODE \
