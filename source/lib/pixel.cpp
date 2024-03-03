@@ -233,7 +233,7 @@ FResult PixelSearch(BOOL *aFound, ResultToken *aFoundX, ResultToken *aFoundY
 	// (in 16bit there is an extra bit but i forgot for which color). And this will explain the
 	// second problem [in the test script], since GetPixel even in 16bit will return some "valid"
 	// data in the last 3bits of each byte."
-	register int i;
+	AHK_REGISTER int i;
 	LONG screen_pixel_count = screen_width * screen_height;
 	if (screen_is_16bit)
 		for (i = 0; i < screen_pixel_count; ++i)

@@ -21,6 +21,12 @@ GNU General Public License for more details.
 
 #pragma once
 
+#if defined(__cplusplus) && __cplusplus >= 199711L
+	#define AHK_REGISTER
+#else
+	#define AHK_REGISTER register
+#endif
+
 #define _CRT_SECURE_NO_DEPRECATE // Avoid compiler warnings in VC++ 8.x/2005 that urge the use of lower-performing C library functions that protect against buffer overruns.
 #define _CRT_NON_CONFORMING_SWPRINTFS // We don't want ISO version of swprintf, which has similar interface with snwprintf (different from sprintf)
 #define WIN32_LEAN_AND_MEAN		 // Exclude rarely-used stuff from Windows headers
