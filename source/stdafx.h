@@ -21,7 +21,7 @@ GNU General Public License for more details.
 
 #pragma once
 
-#if defined(__cplusplus) && __cplusplus >= 199711L
+#if (defined(_MSVC_LANG) && _MSVC_LANG >= 201703L) || (defined(__cplusplus) && __cplusplus >= 201703L)
 	#define AHK_REGISTER
 #else
 	#define AHK_REGISTER register
@@ -31,7 +31,10 @@ GNU General Public License for more details.
 #define _CRT_NON_CONFORMING_SWPRINTFS // We don't want ISO version of swprintf, which has similar interface with snwprintf (different from sprintf)
 #define WIN32_LEAN_AND_MEAN		 // Exclude rarely-used stuff from Windows headers
 #define _WINSOCK_DEPRECATED_NO_WARNINGS // Primarily for WSAAsyncSelect, since the recommended replacement is inadequate.
-#pragma warning (disable:4351) // Suppress spurious warning about "new behavior" for some compilers.
+
+#if defined(_MSC_VER) && _MSC_VER < 1900
+	#pragma warning (disable:4351) // Suppress spurious warning about "new behavior" for some compilers.
+#endif
 
 // Windows Header Files:
 // Necessary to do this prior to including windows.h so that NT functions are unlocked:
