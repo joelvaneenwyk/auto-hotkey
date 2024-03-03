@@ -24,10 +24,8 @@
         "/consoleloggerparameters:NoSummary",
         "${workspaceFolder}/AutoHotkeyx.sln"
       ],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      }
+      "group": "build",
+      "problemMatcher": []
     },
     {
       "label": "rebuild",
@@ -41,7 +39,11 @@
         "/consoleloggerparameters:NoSummary",
         "${workspaceFolder}/AutoHotkeyx.sln"
       ],
-      "group": "build"
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": []
     },
     {
       "label": "build-debug",
