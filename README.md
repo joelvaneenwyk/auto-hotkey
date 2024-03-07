@@ -34,8 +34,8 @@ Requirements:
 
 Secondary configurations are:
 
-- **(mbcs)**: ANSI (multi-byte character set). Configurations without this suffix are Unicode.
-- **.dll**: Builds an experimental dll for use hosting the interpreter, such as to enable the use of v1 libraries in a v2 script. See [README-LIB.md](README-LIB.md).
+- `(mbcs)`: ANSI (multibyte character set). Configurations without this suffix are Unicode.
+- `.dll`: Builds an experimental dll for use hosting the interpreter, such as to enable the use of v1 libraries in a v2 script. See [AutoHotkey dynamic library](docs/ahk-library.md) for more details.
 
 ## Platforms
 
