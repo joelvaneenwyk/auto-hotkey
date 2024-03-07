@@ -1,27 +1,33 @@
 # AutoHotkeyLib
 
-This project includes the capability to compile as a `dll`, for hosting the interpreter in another application. This was added in 2022 and is not to be confused with the `AutoHotkey.dll` first created by `tinku99` in 2009 and later developed by [HotKeyIt](https://github.com/HotKeyIt/ahkdll/) and thqby with [AutoHotkey_H](https://github.com/thqby/AutoHotkey_H/). In contrast with those projects, this dll aims to provide a more convenient interface for hosting the interpreter, behaving as close to base `AutoHotkey` as is practical.
+This project includes the capability to compile as a [Dynamic-Link Library](https://learn.microsoft.com/en-us/windows/win32/dlls/dynamic-link-libraries) (`DLL`), for hosting the interpreter in another application. This was added in 2022 and is not to be confused with other solutions created over the years:
 
-The `dll` has two primary use cases:
+- [`AutoHotkey.dll`](https://github.com/tinku99/ahkdll) which was the first implementation created in 2009 by [`tinku99`](https://github.com/tinku99).
+- [`ahkdll`](https://github.com/HotKeyIt/ahkdll/) developed by [HotKeyIt](https://github.com/HotKeyIt/ahkdll/) is the evolution of the initial solution created by [`tinku99`](https://github.com/tinku99).
+- [`AutoHotkey_H`](https://github.com/thqby/AutoHotkey_H/) developed by [`thqby`](https://github.com/thqby).
+
+In contrast with those projects, this implementation aims to provide a more convenient interface for hosting the interpreter while behaving as close to base `AutoHotkey` as is practical.
+
+We address two primary use cases:
 
 - Host and execute a script; in particular, allow the use of v1 code within a v2 process.
 - Examine a script without executing it; provide data for auto-complete, calltips, navigating to function definitions, etc.
 
-The `dll` is Unicode-only; ANSI is currently unsupported.
+This solution is Unicode-only meaning **ANSI is currently unsupported**.
 
 ## Experimental
 
-The syntax and behaviour described here may change between releases, without notice. Version numbers are purely for the base version of AutoHotkey and do not reflect the status of the Lib API.
+The syntax and behaviour described here may change between releases, without notice. Version numbers are purely for the base version of `AutoHotkey` and do not reflect the status of the library API.
 
 ## Building
 
 Select the `Release.dll` build configuration and appropriate platform to build the dll.
 
-Use the `Debug.dll` configuration for debugging, but in the project settings, set the debug command line to the path of an exe which will load the dll. If both the dll and the exe are debug builds, it should be possible to debug both at once (even if they are not in the same project/directory).
+Use the `Debug.dll` configuration for debugging, but in the project settings, set the debug command line to the path of an exe which will load the dll. If both the `dll` and the `exe` are `Debug` builds, it should be possible to debug both at once even if they are not in the same project/directory.
 
 ## Entry Points
 
-The dll currently has two entry points.
+The `dll` currently has two entry points.
 
 ### Host
 
@@ -31,7 +37,7 @@ Creates and returns an instance of AutoHotkeyLib.
 HRESULT Host(IDispatch **ppLib);
 ```
 
-This can be used from AutoHotkey v2 as follows, where *dll* contains the path or filename:
+This can be used from `AutoHotkey` v2 as follows, where `dll` contains the path or filename:
 
 ```AutoHotkey
 if !hmod := DllCall("LoadLibrary", "str", dll, "ptr")
@@ -39,13 +45,13 @@ if !hmod := DllCall("LoadLibrary", "str", dll, "ptr")
 DllCall(dll "\Host", "ptr*", Lib := ComValue(9, 0), "hresult")
 ```
 
-`Lib` then contains a COM object as described below.
+`Lib` then contains a `COM` object as described below.
 
-The dll does not yet include the set of functions needed to implement a COM class factory, which would allow activation by means such as CoCreateInstance, ComObjCreate, ComObject or CreateObject (depending on the language/version). Such use would require registering the dll, whereas `Host` does not.
+The dll does not yet include the set of functions needed to implement a [COM](https://learn.microsoft.com/en-us/windows/win32/com/component-object-model--com--portal) class factory, which would allow activation by means such as [CoCreateInstance](https://learn.microsoft.com/en-us/windows/win32/api/combaseapi/nf-combaseapi-cocreateinstance), [ComObjCreate](https://documentation.help/AutoHotKey-Functions/ComObjCreate.htm), ComObject or [CreateObject](https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/createobject-function) (depending on the language/version). Such use would require registering the dll, whereas `Host` does not.
 
 ### Main
 
-Executes the script in the same way that AutoHotkey.exe would.
+Executes the script in the same way that `AutoHotkey.exe` would.
 
 ```cpp
 int Main(int argc, LPTSTR argv[]);

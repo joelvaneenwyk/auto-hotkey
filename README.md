@@ -1,12 +1,12 @@
 # AutoHotkey
 
-AutoHotkey is a free, open source macro-creation and automation software utility that allows users to automate repetitive tasks. It is driven by a custom scripting language that has special provision for defining keyboard shortcuts, otherwise known as hotkeys.
+`AutoHotkey` is a free, open source macro-creation and automation software utility that allows users to automate repetitive tasks. It is driven by a custom scripting language that has special provision for defining keyboard shortcuts, otherwise known as hotkeys.
 
-<https://www.autohotkey.com/>
+> <https://www.autohotkey.com/>
 
 ## How to Compile
 
-AutoHotkey is developed with [Microsoft Visual Studio Community 2022](https://www.visualstudio.com/products/visual-studio-community-vs), which is a free download from Microsoft.
+`AutoHotkey` is developed with [Microsoft Visual Studio Community 2022](https://www.visualstudio.com/products/visual-studio-community-vs), which is a free download from Microsoft.
 
 1. Get the source code.
 2. Open `AutoHotkeyx.sln` in Visual Studio.
@@ -41,7 +41,7 @@ Secondary configurations are:
 
 `AutoHotkeyx.vcxproj` includes the following Platforms:
 
-- **Win32**: for Windows 32-bit.
-- **x64**: for Windows x64.
+- `Win32`: for 32-bit Windows.
+- `x64`: for 64-bit Windows.
 
-AutoHotkey supports Windows XP with or without service packs and Windows 2000 via an asm patch (win2kcompat.asm).  Support may be removed if maintaining it becomes non-trivial.  Older versions are not supported.
+AutoHotkey supports Windows XP with or without service packs and Windows 2000 via an asm patch (`win2kcompat.asm`).  Support may be removed if maintaining it becomes non-trivial.  Older versions are not supported.
