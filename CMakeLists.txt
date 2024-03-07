@@ -5,9 +5,9 @@ enable_language(CXX ASM_MASM)
 include(config/pcre.cmake)
 include(config/auto-hotkey.cmake)
 
-# ##############################################################################
-# # testing ####################################################################
-# ##############################################################################
+# ----------------------------------------
+# testing
+# ----------------------------------------
 
 # This is for our testing framework,
 # we don't add REQUIRED because it's just for testing.
@@ -37,18 +37,13 @@ if(GTEST_FOUND)
     )
 endif()
 
-# ##############################################################################
-# # packaging ##################################################################
-# ##############################################################################
+# ----------------------------------------
+# packaging
+# ----------------------------------------
 
 # All install commands get the same destination. this allows us to use paths
 # relative to the executable.
 install(TARGETS auto_hotkey DESTINATION bin)
-
-# This is basically a repeat of the file copy instruction that copies the
-# resources in the build directory, but here we tell cmake that we want it
-# in the package.
-# install(DIRECTORY resources DESTINATION bin)
 
 # Now comes everything we need, to create a package
 # there are a lot more variables you can set, and some
