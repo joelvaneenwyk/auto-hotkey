@@ -9,6 +9,7 @@
       <file path="$PROJECT_DIR$/bin" />
       <file path="$PROJECT_DIR$/bin_debug" />
       <file path="$PROJECT_DIR$/build" />
+      <file path="$PROJECT_DIR$/out" />
       <file path="$PROJECT_DIR$/temp" />
     </excludeRoots>
   </component>

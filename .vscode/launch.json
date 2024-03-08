@@ -25,34 +25,34 @@
             "variableCategories": [
                 {
                     "label": "Local",
-                    "source": "Local",
+                    "source": "Local"
                 },
                 {
                     "label": "Static",
-                    "source": "Static",
+                    "source": "Static"
                 },
                 {
                     "label": "Global",
                     "source": "Global",
-                    "noduplicate": true,
+                    "noduplicate": true
                 },
                 {
                     "label": "Global Classes",
                     "source": "Global",
                     "matchers": [
                         {
-                            "className": "Class",
-                        },
-                    ],
+                            "className": "Class"
+                        }
+                    ]
                 },
                 {
                     "label": "Global Functions",
                     "source": "Global",
                     "matchers": [
                         {
-                            "className": "Func",
-                        },
-                    ],
+                            "className": "Func"
+                        }
+                    ]
                 },
                 {
                     "label": "Built-in Global",
@@ -60,10 +60,18 @@
                     "matchers": [
                         {
                             "builtin": true
-                        },
-                    ],
-                },
+                        }
+                    ]
+                }
             ]
+        },
+        {
+            "type": "cmake",
+            "request": "launch",
+            "name": "Debug portfile(s)",
+            "cmakeDebugType": "external",
+            "pipeName": "\\\\.\\pipe\\vcpkg_ext_portfile_dbg",
+            "preLaunchTask": "Debug vcpkg commands"
         }
     ]
 }
