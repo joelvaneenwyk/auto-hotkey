@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.27)
 project(AutoHotkey)
 
 enable_language(CXX ASM_MASM)
+
+# GoogleTest requires at least C++14
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 include(config/pcre.cmake)
 include(config/auto-hotkey.cmake)
 
@@ -9,33 +14,40 @@ include(config/auto-hotkey.cmake)
 # testing
 # ----------------------------------------
 
-# This is for our testing framework,
-# we don't add REQUIRED because it's just for testing.
-# People who might want to build the project to use it should not be required
-# to install testing dependencies.
-find_package(GTest)
+include(FetchContent)
+FetchContent_Declare(
+        googletest
+        URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+)
+# For Windows: Prevent overriding the parent project's compiler/linker settings
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(googletest)
 
-if(GTEST_FOUND)
-    add_executable(unit_tests ${sources_test} ${sources})
+enable_testing()
 
-    # This define is added to prevent collision with the main.
-    # It might be better solved by not adding the source with the main to the
-    # testing target.
-    target_compile_definitions(unit_tests PUBLIC UNIT_TESTS)
+set(test_name unit_tests)
+set(sources_test
+        source/tests/common_tests.cpp)
+add_executable(
+        ${test_name}
+        ${sources_test}
+)
+# This define is added to prevent collision with the main.
+# It might be better solved by not adding the source with the main to the
+# testing target.
+target_compile_definitions(${test_name} PUBLIC UNIT_TESTS)
 
-    # This allows us to use the executable as a link library, and inherit all
-    # linker options and library dependencies from it, by simply adding it as dependency.
-    set_target_properties(example PROPERTIES ENABLE_EXPORTS on)
+# This allows us to use the executable as a link library, and inherit all
+# linker options and library dependencies from it, by simply adding it as dependency.
+set_target_properties(${test_name} PROPERTIES ENABLE_EXPORTS on)
 
-    target_link_libraries(unit_tests PUBLIC
-        ${GTEST_BOTH_LIBRARIES}
-        example
-    )
+target_link_libraries(
+        ${test_name}
+        GTest::gtest_main
+)
 
-    target_include_directories(unit_tests PUBLIC
-        ${GTEST_INCLUDE_DIRS} # doesn't do anything on linux
-    )
-endif()
+include(GoogleTest)
+gtest_discover_tests(${test_name})
 
 # ----------------------------------------
 # packaging
