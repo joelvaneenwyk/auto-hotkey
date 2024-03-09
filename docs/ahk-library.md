@@ -61,7 +61,8 @@ This was mainly for testing during early development, and is internally used by 
 
 ## Lib API
 
-The methods and properties exposed by the Lib object are defined in [ahklib.idl](source/ahklib.idl), in the  `IAutoHotkeyLib` interface. These are subject to change.
+The methods and properties exposed by the Lib object are defined in [ahklib.idl](../source/ahklib.idl), in the  
+`IAutoHotkeyLib` interface. These are subject to change.
 
 ### General
 
@@ -71,7 +72,7 @@ The methods and properties exposed by the Lib object are defined in [ahklib.idl]
 
 ### Execution
 
-- `ExitCode := Lib.Execute()` manifests hotkeys and excecutes the auto-execute section, then returns. Unlike *Main*, it does not initialize the command line arg variables or check for a previous instance of the script. *Execute* can be called multiple times. If this function is not called, it is possible to extract information about the script without executing it, or to execute specific functions without (or before) executing the auto-execute section.
+- `ExitCode := Lib.Execute()` manifests hotkeys and executes the auto-execute section, then returns. Unlike *Main*, it does not initialize the command line arg variables or check for a previous instance of the script. *Execute* can be called multiple times. If this function is not called, it is possible to extract information about the script without executing it, or to execute specific functions without (or before) executing the auto-execute section.
 - `Lib.Script` returns an object which can be used to retrieve or set global variables (as properties) or call functions (as methods).
 
 ### Informational
