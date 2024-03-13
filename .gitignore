@@ -1,3 +1,10 @@
+#
+# AutoHotkey: Ignore List
+#
+
+.idea/dictionaries/*
+!.idea/dictionaries/ahk.xml
+
 temp/
 bin*/
 ipch/
