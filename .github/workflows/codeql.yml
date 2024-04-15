@@ -62,7 +62,7 @@ jobs:
           languages: ${{ matrix.language }}
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.3
+        uses: microsoft/setup-msbuild@v2
 
       - name: Restore NuGet packages
         working-directory: ${{ github.workspace }}
