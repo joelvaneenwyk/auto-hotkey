@@ -9,6 +9,18 @@ indent_size = 4
 indent_style = space
 indent_size = 2
 
+[*.{clang-format,clang-tidy}]
+indent_style = space
+indent_size = 2
+
+[*.{props,csproj,vcxproj,vcxproj.filters,natvis}]
+indent_style = space
+indent_size = 2
+
+[*.{sln,sln2}]
+indent_style = tab
+indent_size = 8
+
 [*.{c++,cc,cpp,cppm,cxx,h,h++,hh,hpp,hxx,inl,ipp,ixx,tlh,tli}]
 
 # Visual C++ Code Style settings
