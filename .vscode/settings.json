@@ -1,3 +1,14 @@
 {
-    "xml.format.maxLineWidth": 300
+  "[yaml]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.insertSpaces": true,
+    "editor.autoIndent": "keep",
+    "editor.quickSuggestions": {
+      "other": true,
+      "comments": false,
+      "strings": true
+    }
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "xml.format.maxLineWidth": 300
 }

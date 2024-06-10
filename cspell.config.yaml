@@ -1,24 +1,24 @@
-$schema: "https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json"
-version: "0.2"
+$schema: 'https://raw.githubusercontent.com/streetsidesoftware/cspell/main/cspell.schema.json'
+version: '0.2'
 ignorePaths:
-  - "bin/"
-  - "bin_debug/"
-  - "temp/"
-  - "*.svg"
-  - "*.pdb"
-  - "*.obj"
+  - 'bin/'
+  - 'bin_debug/'
+  - 'temp/'
+  - '*.svg'
+  - '*.pdb'
+  - '*.obj'
 language: en
 caseSensitive: false
 dictionaryDefinitions:
-  - name: "auto-hotkey"
+  - name: 'auto-hotkey'
     path: ./config/auto-hotkey-dictionary.txt
     addWords: true
 dictionaries:
-  - "en_US"
-  - "softwareTerms"
-  - "cpp"
-  - "ahk"
-  - "auto-hotkey"
+  - 'en_US'
+  - 'softwareTerms'
+  - 'cpp'
+  - 'ahk'
+  - 'auto-hotkey'
 words: []
 ignoreWords: []
 import: []

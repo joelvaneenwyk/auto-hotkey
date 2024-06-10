@@ -49,14 +49,7 @@
       "label": "build-debug",
       "type": "shell",
       "command": "msbuild",
-      "args": [
-        "/p:Platform=x64",
-        "/p:Configuration=Debug",
-        "/t:build",
-        "/p:GenerateFullPaths=true",
-        "/consoleloggerparameters:NoSummary",
-        "${workspaceFolder}/AutoHotkeyx.sln"
-      ],
+      "args": ["/p:Platform=x64", "/p:Configuration=Debug", "/t:build", "/p:GenerateFullPaths=true", "/consoleloggerparameters:NoSummary", "${workspaceFolder}/AutoHotkeyx.sln"],
       "group": "build"
     }
   ],

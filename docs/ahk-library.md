@@ -61,23 +61,23 @@ This was mainly for testing during early development, and is internally used by 
 
 ## Lib API
 
-The methods and properties exposed by the Lib object are defined in [ahklib.idl](../source/ahklib.idl), in the  
+The methods and properties exposed by the Lib object are defined in [ahklib.idl](../source/ahklib.idl), in the
 `IAutoHotkeyLib` interface. These are subject to change.
 
 ### General
 
-- `ExitCode := Lib.Main(CmdLine)` executes a command line more or less the same as AutoHotkey.exe would. If the script is persistent, it does not return. *CmdLine* must include "parameter 0" (which is normally the path of the exe), although its value is ignored. *ExitCode* is either 0 or 2 (CRITICAL_ERROR); ExitApp causes the whole program to terminate.
+- `ExitCode := Lib.Main(CmdLine)` executes a command line more or less the same as AutoHotkey.exe would. If the script is persistent, it does not return. _CmdLine_ must include "parameter 0" (which is normally the path of the exe), although its value is ignored. _ExitCode_ is either 0 or 2 (CRITICAL_ERROR); ExitApp causes the whole program to terminate.
 - `Lib.LoadFile(FileName)` loads a script file but does not execute it. It can only be called once, unless the dll is unloaded and loaded again. The script is partially initialized for execution, but hotkeys are not manifested.
-- `Lib.OnProblem(Callback)` registers a callback to be called for each warning or error, including load-time errors (if registered before the script is loaded) and exceptions that aren't caught or handled by OnError. If a callback is set, the default error message is not shown. *Callback* receives a single parameter containing the thrown value or exception. If an exception object is created for warnings and errors that otherwise wouldn't have one, `What` is set to "Warn" or "Error".
+- `Lib.OnProblem(Callback)` registers a callback to be called for each warning or error, including load-time errors (if registered before the script is loaded) and exceptions that aren't caught or handled by OnError. If a callback is set, the default error message is not shown. _Callback_ receives a single parameter containing the thrown value or exception. If an exception object is created for warnings and errors that otherwise wouldn't have one, `What` is set to "Warn" or "Error".
 
 ### Execution
 
-- `ExitCode := Lib.Execute()` manifests hotkeys and executes the auto-execute section, then returns. Unlike *Main*, it does not initialize the command line arg variables or check for a previous instance of the script. *Execute* can be called multiple times. If this function is not called, it is possible to extract information about the script without executing it, or to execute specific functions without (or before) executing the auto-execute section.
+- `ExitCode := Lib.Execute()` manifests hotkeys and executes the auto-execute section, then returns. Unlike _Main_, it does not initialize the command line arg variables or check for a previous instance of the script. _Execute_ can be called multiple times. If this function is not called, it is possible to extract information about the script without executing it, or to execute specific functions without (or before) executing the auto-execute section.
 - `Lib.Script` returns an object which can be used to retrieve or set global variables (as properties) or call functions (as methods).
 
 ### Informational
 
-- `Lib.Funcs`, `Lib.Vars` and `Lib.Labels` return collections of objects describing functions, variables and labels. See `IDescribeFunc`, `IDescribeVar`, `IDescribeLabel` and `IDescribeParam` in [ahklib.idl](source/ahklib.idl) for usage. Collections use the `IDispCollection` interface, with Funcs, Vars and Labels accepting a name for *Index* and Params accepting a one-based index.
+- `Lib.Funcs`, `Lib.Vars` and `Lib.Labels` return collections of objects describing functions, variables and labels. See `IDescribeFunc`, `IDescribeVar`, `IDescribeLabel` and `IDescribeParam` in [ahklib.idl](source/ahklib.idl) for usage. Collections use the `IDispCollection` interface, with Funcs, Vars and Labels accepting a name for _Index_ and Params accepting a one-based index.
 
 ## Not Implemented
 

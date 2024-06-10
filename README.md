@@ -26,7 +26,7 @@ Requirements:
 
 ## Build Configurations
 
-`AutoHotkeyx.vcxproj` contains several combinations of build configurations.  The main configurations are:
+`AutoHotkeyx.vcxproj` contains several combinations of build configurations. The main configurations are:
 
 - **Debug**: AutoHotkey.exe in debug mode.
 - **Release**: AutoHotkey.exe for general use.
@@ -44,4 +44,4 @@ Secondary configurations are:
 - `Win32`: for 32-bit Windows.
 - `x64`: for 64-bit Windows.
 
-AutoHotkey supports Windows XP with or without service packs and Windows 2000 via an asm patch (`win2kcompat.asm`).  Support may be removed if maintaining it becomes non-trivial.  Older versions are not supported.
+AutoHotkey supports Windows XP with or without service packs and Windows 2000 via an asm patch (`win2kcompat.asm`). Support may be removed if maintaining it becomes non-trivial. Older versions are not supported.
