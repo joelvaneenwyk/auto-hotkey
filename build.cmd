@@ -4,7 +4,9 @@ goto:$Main
 :LogCommand
 setlocal EnableDelayedExpansion
     set "_log=%~1"
+	set "_log_dir=%~dp1"
     shift
+	if not exist "!_log_dir!" mkdir "!_log_dir!"
     set "_command=%1 %2 %3 %4 %5 %6 %7 %8 %9"
     set "_command=!_command:   = !"
     set "_command=!_command:  = !"
@@ -15,6 +17,7 @@ exit /b %errorlevel%
 :Build
     set "root=%~dp1"
     if "%root:~-1%"=="\" set "root=%root:~0,-1%"
+    if not exist "%root%\.build" mkdir "%root%\.build"
     call :LogCommand ^
         "%root%\.build\devenv_log.txt" ^
         "%root%\source\scripts\vsdev.cmd" devenv "%root%\AutoHotkeyx.sln" /Build
