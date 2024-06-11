@@ -6,7 +6,11 @@
     "options": {
       "shell": {
         "executable": "cmd.exe",
-        "args": ["/D", "/C", "${workspaceFolder}\\source\\scripts\\vsdev.cmd"]
+        "args": [
+          "/D",
+          "/C",
+          "${workspaceFolder}\\source\\scripts\\vsdev.cmd"
+        ]
       }
     },
     "problemMatcher": "$msCompile"
@@ -49,7 +53,14 @@
       "label": "build-debug",
       "type": "shell",
       "command": "msbuild",
-      "args": ["/p:Platform=x64", "/p:Configuration=Debug", "/t:build", "/p:GenerateFullPaths=true", "/consoleloggerparameters:NoSummary", "${workspaceFolder}/AutoHotkeyx.sln"],
+      "args": [
+        "/p:Platform=x64",
+        "/p:Configuration=Debug",
+        "/t:build",
+        "/p:GenerateFullPaths=true",
+        "/consoleloggerparameters:NoSummary",
+        "${workspaceFolder}/AutoHotkeyx.sln"
+      ],
       "group": "build"
     }
   ],
@@ -58,14 +69,20 @@
       "id": "platform",
       "description": "Platform",
       "type": "pickString",
-      "options": ["x64", "Win32"],
+      "options": [
+        "x64",
+        "Win32"
+      ],
       "default": "x64"
     },
     {
       "id": "buildconfig",
       "description": "Build Configuration",
       "type": "pickString",
-      "options": ["Release", "Debug"],
+      "options": [
+        "Release",
+        "Debug"
+      ],
       "default": "Release"
     }
   ]

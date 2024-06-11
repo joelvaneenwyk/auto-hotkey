@@ -1,3 +1,13 @@
 {
+  "files.associations": {
+    ".clang-format": "yaml",
+    ".clang-tidy": "yaml",
+    "*.wsf": "javascript",
+    "ChangeLog": "plaintext",
+    "HACKING": "plaintext",
+    "INSTALL": "plaintext",
+    "NEWS": "plaintext",
+    "NON-UNIX-USE": "plaintext"
+  },
   "xml.format.maxLineWidth": 300
 }
