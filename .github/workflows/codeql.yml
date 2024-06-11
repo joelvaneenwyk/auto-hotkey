@@ -9,7 +9,7 @@
 # the `language` matrix defined below to confirm you have the correct set of
 # supported CodeQL languages.
 #
-name: "CodeQL"
+name: 'CodeQL'
 
 on:
   push:
@@ -17,7 +17,7 @@ on:
   pull_request:
     branches: [main, develop]
   schedule:
-    - cron: "28 8 * * 5"
+    - cron: '28 8 * * 5'
 
 env:
   # Path to the solution file relative to the root of the project.
@@ -33,7 +33,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        language: ["c-cpp"]
+        language: ['c-cpp']
         config: [Release, Debug]
         platform: [x64, Win32]
 
@@ -77,4 +77,4 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{matrix.language}}"
+          category: '/language:${{matrix.language}}'

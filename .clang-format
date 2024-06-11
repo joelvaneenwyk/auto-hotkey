@@ -19,7 +19,7 @@ SpaceBeforeAssignmentOperators: true
 SpaceAfterLogicalNot: false
 SpaceAfterTemplateKeyword: false
 SpaceAfterCStyleCast:
-BraceWrapping: 
+BraceWrapping:
   AfterCaseLabel: true
   AfterClass: true
   AfterControlStatement: true
@@ -45,7 +45,7 @@ AllowShortFunctionsOnASingleLine: All
 AllowShortIfStatementsOnASingleLine: WithoutElse
 AllowShortLoopsOnASingleLine: true
 ConstructorInitializerAllOnOneLineOrOnePerLine: false
-IncludeCategories: 
+IncludeCategories:
   - Regex: '^<.*'
     Priority: 1
   - Regex: '^".*'
@@ -70,4 +70,3 @@ SpacesInCStyleCastParentheses: false
 SpacesInParentheses: false
 UseTab: AlignWithSpaces
 TabWidth: 4
-...

@@ -1,77 +1,77 @@
 {
-    // Use IntelliSense to learn about possible attributes.
-    // Hover to view descriptions of existing attributes.
-    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
-    "version": "0.2.0",
-    "configurations": [
+  // Use IntelliSense to learn about possible attributes.
+  // Hover to view descriptions of existing attributes.
+  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Debug x64w C++",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "bin_debug/AutoHotkey64.exe",
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "${workspaceRoot}",
+      "preLaunchTask": "build-debug"
+    },
+    {
+      "name": "Debug x64w AHK",
+      "type": "autohotkey",
+      "request": "launch",
+      "program": "${file}",
+      "runtime": "${workspaceRoot}/bin_debug/AutoHotkey64.exe",
+      "useDebugDirective": true,
+      "args": [],
+      "variableCategories": [
         {
-            "name": "Debug x64w C++",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "bin_debug/AutoHotkey64.exe",
-            "args": [],
-            "stopAtEntry": false,
-            "cwd": "${workspaceRoot}",
-            "preLaunchTask": "build-debug"
+          "label": "Local",
+          "source": "Local"
         },
         {
-            "name": "Debug x64w AHK",
-            "type": "autohotkey",
-            "request": "launch",
-            "program": "${file}",
-            "runtime": "${workspaceRoot}/bin_debug/AutoHotkey64.exe",
-            "useDebugDirective": true,
-            "args": [],
-            "variableCategories": [
-                {
-                    "label": "Local",
-                    "source": "Local"
-                },
-                {
-                    "label": "Static",
-                    "source": "Static"
-                },
-                {
-                    "label": "Global",
-                    "source": "Global",
-                    "noduplicate": true
-                },
-                {
-                    "label": "Global Classes",
-                    "source": "Global",
-                    "matchers": [
-                        {
-                            "className": "Class"
-                        }
-                    ]
-                },
-                {
-                    "label": "Global Functions",
-                    "source": "Global",
-                    "matchers": [
-                        {
-                            "className": "Func"
-                        }
-                    ]
-                },
-                {
-                    "label": "Built-in Global",
-                    "source": "Global",
-                    "matchers": [
-                        {
-                            "builtin": true
-                        }
-                    ]
-                }
-            ]
+          "label": "Static",
+          "source": "Static"
         },
         {
-            "type": "cmake",
-            "request": "launch",
-            "name": "Debug portfile(s)",
-            "cmakeDebugType": "external",
-            "pipeName": "\\\\.\\pipe\\vcpkg_ext_portfile_dbg",
-            "preLaunchTask": "Debug vcpkg commands"
+          "label": "Global",
+          "source": "Global",
+          "noduplicate": true
+        },
+        {
+          "label": "Global Classes",
+          "source": "Global",
+          "matchers": [
+            {
+              "className": "Class"
+            }
+          ]
+        },
+        {
+          "label": "Global Functions",
+          "source": "Global",
+          "matchers": [
+            {
+              "className": "Func"
+            }
+          ]
+        },
+        {
+          "label": "Built-in Global",
+          "source": "Global",
+          "matchers": [
+            {
+              "builtin": true
+            }
+          ]
         }
-    ]
+      ]
+    },
+    {
+      "type": "cmake",
+      "request": "launch",
+      "name": "Debug portfile(s)",
+      "cmakeDebugType": "external",
+      "pipeName": "\\\\.\\pipe\\vcpkg_ext_portfile_dbg",
+      "preLaunchTask": "Debug vcpkg commands"
+    }
+  ]
 }
