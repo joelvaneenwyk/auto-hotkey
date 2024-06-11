@@ -16,8 +16,16 @@ try {
 	var fs = new ActiveXObject("Scripting.FileSystemObject");
 
 	var xml = fs.OpenTextFile(source).ReadAll();
+
+	// We use a loop here to remove all comments, as they can be nested. This
+	// addresses 'incomplete-multi-character-sanitization' CodeQL issue.
+	let previous;
+	do {
+		previous = xml;
+		xml = xml.replace(/<!--|--!?>/g, "");
+	} while (xml !== previous);
+
 	xml = xml
-		.replace(/<!--[\s\S]*?-->/g, "")	// Remove comments
 		.replace(/>\s*</g, "><")			// Remove space between elements
 		.replace(/\r?\n\s*/g, " ")			// Replace line breaks+indent with one space
 		.replace(/<\?xml.*?\?>/, "");		// The VS manifest tool seems to strip this out, so we will too
