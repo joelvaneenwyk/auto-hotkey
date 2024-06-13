@@ -5,7 +5,7 @@ root = true
 indent_style = tab
 indent_size = 4
 
-[*.{json,yml,yaml}]
+[*.{json,yml,yaml,wsf}]
 indent_style = space
 indent_size = 2
 
@@ -20,6 +20,10 @@ indent_size = 2
 [*.{sln,sln2}]
 indent_style = tab
 indent_size = 8
+
+[*.{bat,cmd}]
+indent_style = space
+indent_size = 4
 
 [*.{c++,cc,cpp,cppm,cxx,h,h++,hh,hpp,hxx,inl,ipp,ixx,tlh,tli}]
 
