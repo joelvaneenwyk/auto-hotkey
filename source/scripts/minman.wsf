@@ -19,7 +19,7 @@ try {
 
 	// We use a loop here to remove all comments, as they can be nested. This
 	// addresses 'incomplete-multi-character-sanitization' CodeQL issue.
-	let previous;
+	var previous;
 	do {
 		previous = xml;
 		xml = xml.replace(/<!--|--!?>/g, "");
