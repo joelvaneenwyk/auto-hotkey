@@ -909,27 +909,28 @@ bif_impl FResult KeyHistory(optl<int> aMaxEvents)
 
 
 DWORD GetAHKInstallDir(LPTSTR aBuf)
-// Caller must ensure that aBuf is large enough (either by having called this function a previous time
-// to get the length, or by making it MAX_PATH in capacity).
+// Caller must pass a buffer of MAX_PATH characters.
 // Returns the length of the string (0 if empty).
 {
-	TCHAR buf[MAX_PATH];
-	DWORD length;
-#ifdef _WIN64
-	// First try 64-bit registry, then 32-bit registry.
-	for (DWORD flag = 0; ; flag = KEY_WOW64_32KEY)
-#else
-	// First try 32-bit registry, then 64-bit registry.
-	for (DWORD flag = 0; ; flag = KEY_WOW64_64KEY)
-#endif
+	for (HKEY key = HKEY_CURRENT_USER; ; key = HKEY_LOCAL_MACHINE)
 	{
-		length = ReadRegString(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\AutoHotkey"), _T("InstallDir"), buf, MAX_PATH, flag);
-		if (length || flag)
-			break;
+#ifdef _WIN64
+		// First try 64-bit registry, then 32-bit registry.
+		for (DWORD flag = 0; ; flag = KEY_WOW64_32KEY)
+#else
+		// First try 32-bit registry, then 64-bit registry.
+		for (DWORD flag = 0; ; flag = KEY_WOW64_64KEY)
+#endif
+		{
+			DWORD length = ReadRegString(key, _T("SOFTWARE\\AutoHotkey"), _T("InstallDir"), aBuf, MAX_PATH, flag);
+			if (length)
+				return length;
+			if (flag)
+				break;
+		}
+		if (key == HKEY_LOCAL_MACHINE)
+			return 0;
 	}
-	if (aBuf)
-		_tcscpy(aBuf, buf); // v1.0.47: Must be done as a separate copy because passing a size of MAX_PATH for aBuf can crash when aBuf is actually smaller than that (even though it's large enough to hold the string).
-	return length;
 }
 
 
@@ -1325,7 +1326,8 @@ VOID CALLBACK DerefTimeout(HWND hWnd, UINT uMsg, UINT_PTR idEvent, DWORD dwTime)
 bif_impl FResult MouseGetPos(int *aX, int *aY, ResultToken *aParent, ResultToken *aChild, optl<int> aFlag)
 {
 	POINT point;
-	GetCursorPos(&point);  // Realistically, can't fail?
+	if (!GetCursorPos(&point))  // fails when locked or sleeping
+		return FR_E_WIN32;
 
 	POINT origin = {0};
 	CoordToScreen(origin, COORD_MODE_MOUSE);
@@ -2257,8 +2259,11 @@ type_mismatch:
 BIF_DECL(BIF_IsSet)
 {
 	Var *var = ParamIndexToOutputVar(0);
+	// var should always be non-null for IsSet due to load-time validation.
+	// IsSetRef requires the additional check since general validation permits
+	// objects which aren't VarRefs but could implement __value.
 	if (!var)
-		_f_throw_param(0, _T("variable reference"));
+		_f_throw_param(0, _T("VarRef"));
 	_f_return_b(!var->IsUninitializedNormalVar());
 }
 
@@ -2339,9 +2344,9 @@ BIF_DECL(BIF_VarSetStrCapacity)
 // 2: Requested capacity.
 {
 	Var *target_var = ParamIndexToOutputVar(0);
-	// Redundant due to prior validation of OutputVars:
-	//if (!target_var)
-	//	_f_throw_param(0, _T("variable reference"));
+	// Need to check since prior validation might have allowed a non-Var output ref object:
+	if (!target_var)
+		_f_throw_param(0, _T("VarRef"));
 	Var &var = *target_var;
 	ASSERT(var.Type() == VAR_NORMAL); // Should always be true.
 
@@ -3333,9 +3338,7 @@ SymbolType TokenIsPureNumeric(ExprTokenType &aToken)
 	case SYM_FLOAT:
 		return aToken.symbol;
 	case SYM_VAR:
-		if (!aToken.var->IsUninitializedNormalVar()) // Caller doesn't want a warning, so avoid calling Contents().
-			return aToken.var->IsPureNumeric();
-		//else fall through:
+		return aToken.var->IsPureNumeric();
 	default:
 		return PURE_NOT_NUMERIC;
 	}
@@ -3352,8 +3355,6 @@ SymbolType TokenIsPureNumeric(ExprTokenType &aToken, SymbolType &aNumType)
 	case SYM_FLOAT:
 		return aNumType = aToken.symbol;
 	case SYM_VAR:
-		if (aToken.var->IsUninitializedNormalVar()) // Caller doesn't want a warning, so avoid calling Contents().
-			return aNumType = PURE_NOT_NUMERIC; // i.e. empty string is non-numeric.
 		if (aNumType = aToken.var->IsPureNumeric())
 			return aNumType; // This var contains a pure binary number.
 		// Otherwise, it might be a numeric string (i.e. impure).
@@ -3563,11 +3564,10 @@ StringCaseSenseType TokenToStringCase(ExprTokenType& aToken)
 	switch (aToken.symbol)
 	{
 	case SYM_VAR:
-		
 		switch (aToken.var->IsPureNumeric())
 		{
 		case PURE_INTEGER: int_val = aToken.var->ToInt64(); break;
-		case PURE_NOT_NUMERIC: str = aToken.var->Contents(); break;
+		case PURE_NOT_NUMERIC: str = aToken.var->Contents(FALSE); break; // Pass FALSE because it's not numeric and can't be VAR_VIRTUAL in this context.
 		case PURE_FLOAT: 
 		default:	
 			return SCS_INVALID;
@@ -3588,11 +3588,31 @@ StringCaseSenseType TokenToStringCase(ExprTokenType& aToken)
 
 
 
+bool TokenIsOutputVar(ExprTokenType &aToken)
+{
+	if (aToken.IsOptimizedOutputVar())
+		return true;
+	return ObjectCanBeOutputVar(TokenToObject(aToken));
+}
+
+
+
+bool ObjectCanBeOutputVar(IObject *aObj)
+{
+	// Permit VarRef (which always works) and ComValue (which doesn't support HasProp but could work).
+	return aObj && (!aObj->IsOfType(Object::sPrototype) || ((Object*)aObj)->HasProp(_T("__Value")));
+}
+
+
+
 Var *TokenToOutputVar(ExprTokenType &aToken)
 {
-	if (aToken.symbol == SYM_VAR && !VARREF_IS_READ(aToken.var_usage)) // VARREF_ISSET is tolerated for use by IsSet().
+	if (aToken.IsOptimizedOutputVar())
 		return aToken.var;
-	return dynamic_cast<VarRef *>(TokenToObject(aToken));
+	auto obj = TokenToObject(aToken);
+	if (obj && obj->Base() == Object::sVarRefPrototype)
+		return static_cast<VarRef *>(obj);
+	return nullptr;
 }
 
 

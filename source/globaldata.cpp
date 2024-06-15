@@ -74,9 +74,7 @@ HHOOK g_MouseHook = NULL;
 HHOOK g_PlaybackHook = NULL;
 bool g_ForceLaunch = false;
 bool g_WinActivateForce = false;
-WarnMode g_Warn_LocalSameAsGlobal = WARNMODE_OFF;
-WarnMode g_Warn_Unreachable = WARNMODE_MSGBOX;
-WarnMode g_Warn_VarUnset = WARNMODE_MSGBOX;
+WarnMode g_WarnMode = WARNMODE_MSGBOX;
 SingleInstanceType g_AllowOnlyOneInstance = SINGLE_INSTANCE_PROMPT;
 bool g_persistent = false;  // Whether the script should stay running even after the auto-exec section finishes.
 bool g_NoTrayIcon = false;
@@ -248,9 +246,10 @@ Action g_act[] =
 	, {_T("}"), 0, 0}
 
 	, {_T("#HotIf"), 0, 1}
-	, {_T("Exit"), 0, 1} // ExitCode
+	, {_T(";end"), 0, 0} // ACT_EXIT
 
 	, {_T("Static"), 1, 1} // ACT_STATIC - executes once and then the Line is removed.
+	, {_T("Export"), 1, 1} // ACT_EXPORT - used only at load time.
 	, {_T("Global"), 1, 1} // ACT_GLOBAL - used only at load time.
 	, {_T("Local"), 1, 1} // ACT_LOCAL - used only at load time.
 
