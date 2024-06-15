@@ -171,7 +171,10 @@ public:
 	{
 		if (index->vt != VT_BSTR)
 			return DISP_E_TYPEMISMATCH;
-		auto func = g_script.FindGlobalFunc(index->bstrVal);
+		auto var = g_script.FindGlobalVar(index->bstrVal); // FIXME: Module support.
+		if (!var)
+			return DISP_E_BADINDEX;
+		auto func = dynamic_cast<Func*>(var->ToObject());
 		if (!func)
 			return DISP_E_BADINDEX;
 		value->vt = VT_DISPATCH;
@@ -327,7 +330,7 @@ public:
 
 	STDMETHODIMP_(BSTR) get_Name() { return SysAllocString(mVar->mName); }
 	STDMETHODIMP_(BOOL) get_IsReadOnly() { return VAR_IS_READONLY(*mVar); }
-	STDMETHODIMP_(BOOL) get_IsVirtual() { return mVar->Type() == VAR_VIRTUAL; }
+	STDMETHODIMP_(BOOL) get_IsVirtual() { return mVar->IsVirtual(); }
 	STDMETHODIMP_(BOOL) get_IsDeclared() { return mVar->IsDeclared(); }
 	STDMETHODIMP_(BOOL) get_IsSuperGlobal() { return FALSE; }
 };
@@ -497,7 +500,7 @@ public:
 	EnumLabels() 
 		: EnumVARIANT()
 #ifdef CONFIG_DLL
-		, mCurrLabel(g_script.mFirstLabel) 
+		, mCurrLabel(g_script.mDefaultModule.mFirstLabel) 
 #else
 		, mCurrLabel(nullptr)
 #endif
@@ -533,7 +536,7 @@ public:
 	{
 		if (index->vt != VT_BSTR)
 			return DISP_E_TYPEMISMATCH;
-		Label *label = g_script.FindLabel(index->bstrVal);
+		Label *label = g_script.FindLabel(index->bstrVal); // FIXME: Module support.
 		if (!label)
 			return DISP_E_BADINDEX;
 		value->vt = VT_DISPATCH;
@@ -543,6 +546,7 @@ public:
 	STDMETHODIMP get_Count(int *pCount)
 	{
 #ifdef CONFIG_DLL
+        // FIXME: This counts all labels, not just those available in this collection.
 		*pCount = g_script.mLabelCount;
 #endif
 		return S_OK;
@@ -578,13 +582,12 @@ class AutoHotkeyScript : public ObjectBase
 		if (IS_INVOKE_SET) // Script.Var := Value
 			return var->Assign(*aParam[0]);
 		// Script.Var
-		if (var->Type() != VAR_VIRTUAL)
+		if (!var->IsVirtual())
 		{
 			var->ToToken(aResultToken);
 			return OK;
 		}
 		// Built-in/virtual variable
-		aResultToken.symbol = SYM_INTEGER; // For _f_return_i() and consistency with BIFs.
 		var->Get(aResultToken);
 		if (aResultToken.symbol == SYM_OBJECT)
 			aResultToken.object->AddRef();
@@ -626,7 +629,7 @@ public:
 		if (Line::sSourceFileCount)
 			return HRESULT_FROM_WIN32(ERROR_NOT_SUPPORTED);
 		EarlyAppInit();
-		if (!g_script.Init(aScriptPath))
+		if (!g_script.Init(aScriptPath, nullptr))
 			return E_FAIL;
 		if (g_script.LoadFromFile(aScriptPath) == LOADING_FAILED
 			|| !InitForExecution())

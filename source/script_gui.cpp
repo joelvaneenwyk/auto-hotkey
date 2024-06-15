@@ -18,11 +18,40 @@ GNU General Public License for more details.
 #include <Shlwapi.h>
 #include <uxtheme.h>
 #include "script.h"
+#include "script_gui.h"
 #include "globaldata.h" // for a lot of things
 #include "application.h" // for MsgSleep()
 #include "window.h" // for SetForegroundWindowEx()
 #include "qmath.h" // for qmathLog()
 #include "script_func_impl.h"
+
+
+static inline void AddGuiToList(GuiType* gui)
+{
+	gui->mNextGui = NULL;
+	gui->mPrevGui = g_lastGui;
+	if (g_lastGui)
+		g_lastGui->mNextGui = gui;
+	g_lastGui = gui;
+	if (!g_firstGui)
+		g_firstGui = gui;
+	// AddRef() is not called here because we want the GUI to be destroyed automatically
+	// when the script releases its last reference if it's not visible, or when the GUI
+	// is closed if the script has no references.  See VisibilityChanged().
+}
+
+static inline void RemoveGuiFromList(GuiType* gui)
+{
+	if (!gui->mPrevGui && gui != g_firstGui)
+		// !mPrevGui indicates this is either the first Gui or not in the list.
+		// Since both conditions were met, this Gui must have been partially constructed
+		// but not added to the list, and is being destroyed due to an error in Create.
+		return;
+	GuiType *prev = gui->mPrevGui, *&prevNext = prev ? prev->mNextGui : g_firstGui;
+	GuiType *next = gui->mNextGui, *&nextPrev = next ? next->mPrevGui : g_lastGui;
+	prevNext = next;
+	nextPrev = prev;
+}
 
 
 // Gui methods use this macro either if they require the Gui to have a window,
@@ -182,11 +211,12 @@ ResultType GuiType::GetEnumItem(UINT &aIndex, Var *aOutputVar1, Var *aOutputVar2
 		aOutputVar2 = aOutputVar1; // Return the more useful value in single-var mode: the control object.
 		aOutputVar1 = nullptr;
 	}
+	ResultType result = OK;
 	if (aOutputVar1)
-		aOutputVar1->AssignHWND(ctrl->hwnd);
-	if (aOutputVar2)
-		aOutputVar2->Assign(ctrl);
-	return CONDITION_TRUE;
+		result = aOutputVar1->AssignHWND(ctrl->hwnd);
+	if (aOutputVar2 && result)
+		result = aOutputVar2->Assign(ctrl);
+	return result ? CONDITION_TRUE : FAIL;
 }
 
 
@@ -481,10 +511,12 @@ FResult GuiType::set_Name(StrArg aName)
 
 void GuiType::MethodGetPos(int *aX, int *aY, int *aWidth, int *aHeight, RECT &aPos, HWND aOrigin)
 {
-	MapWindowPoints(aOrigin, mOwner, (LPPOINT)&aPos, 2);
-
-	if (aX)			*aX = Unscale(aPos.left);
-	if (aY)			*aY = Unscale(aPos.top);
+	// Make coords relative to mOwner (like Move/Show) only if it is the parent window.
+	// This call is also necessary for GetClientPos (which passes mHwnd for aOrigin).
+	MapWindowPoints(aOrigin, (mStyle & WS_CHILD) ? mOwner : NULL, (LPPOINT)&aPos, 2);
+	
+	if (aX)			*aX = aPos.left;
+	if (aY)			*aY = aPos.top;
 	if (aWidth)		*aWidth = Unscale(aPos.right - aPos.left);
 	if (aHeight)	*aHeight = Unscale(aPos.bottom - aPos.top);
 }
@@ -6341,7 +6373,7 @@ ResultType GuiType::ControlParseOptions(LPCTSTR aOptions, GuiControlOptionsType 
 						option_char = 0; // Mark it as invalid for switch() below.
 				}
 				if ((option_char == 'X' || option_char == 'Y')
-					|| (option_char == 'W' || option_char == 'H') && (option_int != -1 || option_char2 == 'P')) // Scale W/H unless it's W-1 or H-1.
+					|| (option_char == 'W' || option_char == 'H') && (option_int > 0 || option_char2 == 'P')) // Scale W/H unless it's negative, as some controls give special meaning to W-1 H-1 W-2.
 					option_int = Scale(option_int);
 			}
 
@@ -9589,7 +9621,7 @@ bool GuiType::ControlWmNotify(GuiControlType &aControl, LPNMHDR aNmHdr, INT_PTR 
 
 bool GuiType::MsgMonitor(GuiControlType *aControl, UINT aMsg, WPARAM awParam, LPARAM alParam, MSG *apMsg, INT_PTR *aRetVal)
 {
-	ExprTokenType param[] = { this, (__int64)awParam, (__int64)(DWORD_PTR)alParam, (__int64)aMsg };
+	ExprTokenType param[] = { aControl ? (IObject*)aControl : this, (__int64)awParam, (__int64)(DWORD_PTR)alParam, (__int64)aMsg };
 	InitNewThread(0, false, true);
 	g_script.mLastPeekTime = GetLocalTickCount();
 	if (apMsg)

@@ -20,6 +20,7 @@ GNU General Public License for more details.
 #include "window.h" // for several MsgBox and window functions
 #include "util.h" // for strlcpy()
 #include "resources/resource.h"  // For ID_TRAY_OPEN.
+#include "script_gui.h"
 
 
 bool MsgSleep(int aSleepDuration, MessageMode aMode)
