@@ -9,7 +9,7 @@
 # the `language` matrix defined below to confirm you have the correct set of
 # supported CodeQL languages.
 #
-name: "CodeQL"
+name: 'CodeQL'
 
 on:
   push:
@@ -17,7 +17,7 @@ on:
   pull_request:
     branches: [main, develop]
   schedule:
-    - cron: "28 8 * * 5"
+    - cron: '28 8 * * 5'
 
 env:
   # Path to the solution file relative to the root of the project.
@@ -31,9 +31,11 @@ env:
 jobs:
   analyze:
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        language: ["c-cpp"]
+        language: ['c-cpp']
+        config: [Release, Debug]
+        platform: [x64, Win32]
 
     name: Analyze
     # Runner size impacts CodeQL analysis time. To learn more, please see:
@@ -62,7 +64,7 @@ jobs:
           languages: ${{ matrix.language }}
 
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.3
+        uses: microsoft/setup-msbuild@v2
 
       - name: Restore NuGet packages
         working-directory: ${{ github.workspace }}
@@ -70,27 +72,9 @@ jobs:
 
       - name: Build
         working-directory: ${{ github.workspace }}
-        # Add additional options to the MSBuild command line here (like platform or verbosity level).
-        # See https://docs.microsoft.com/visualstudio/msbuild/msbuild-command-line-reference
-        run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} ${{env.SOLUTION_FILE_PATH}}
-
-      # Autobuild attempts to build any compiled languages (C/C++, C#, Go, Java, or Swift).
-      # If this step fails, then you should remove it and run the build manually (see below)
-      - name: Autobuild
-        uses: github/codeql-action/autobuild@v3
-        if: ${{ matrix.language != 'c-cpp' }}
-
-      # ℹ️ Command-line programs to run using the OS shell.
-      # 📚 See https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
-
-      #   If the Autobuild fails above, remove it and uncomment the following three lines.
-      #   modify them (or add more) to build your code if your project, please refer to the EXAMPLE below for guidance.
-
-      # - run: |
-      #     echo "Run, Build Application using script"
-      #     ./location_of_script_within_repo/buildscript.sh
+        run: msbuild /m /p:Configuration="${{matrix.config}}" /p:Platform="${{matrix.platform}}" ${{env.SOLUTION_FILE_PATH}}
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:${{matrix.language}}"
+          category: '/language:${{matrix.language}}'

@@ -1,0 +1,40 @@
+/**
+ *
+ * This script minimizes the size of "AutoHotkey.exe.manifest" file.
+ *
+ * NOTE: We use JavaScript (Windows Scripting Host) to not rely on AutoHotkey which may
+ *       not be compiled yet.
+ *
+ */
+try {
+	var args = WScript.Arguments;
+	if (args.length < 2) {
+		throw new Error("Too few arguments!");
+	}
+	var source = args(0);
+	var dest = args(1);
+	var fs = new ActiveXObject("Scripting.FileSystemObject");
+
+	var xml = fs.OpenTextFile(source).ReadAll();
+
+	// We use a loop here to remove all comments, as they can be nested. This
+	// addresses 'incomplete-multi-character-sanitization' CodeQL issue.
+	var previous;
+	do {
+		previous = xml;
+		xml = xml.replace(/<!--|--!?>/g, "");
+	} while (xml !== previous);
+
+	xml = xml
+		.replace(/>\s*</g, "><")			// Remove space between elements
+		.replace(/\r?\n\s*/g, " ")			// Replace line breaks+indent with one space
+		.replace(/<\?xml.*?\?>/, "");		// The VS manifest tool seems to strip this out, so we will too
+
+	fs.CreateTextFile(dest, true).Write(xml);
+
+	WScript.Echo("Finished processing manifest: '" + dest + "'");
+}
+catch (ex) {
+	WScript.Echo("Error in 'minman.js' script: '" + ex.message + "'");
+	WScript.Quit(1);
+}

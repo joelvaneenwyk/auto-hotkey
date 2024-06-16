@@ -428,7 +428,7 @@ HANDLE Clipboard::GetClipboardDataTimeout(UINT uFormat, BOOL *aNullIsOkay)
 	return GetClipboardData(uFormat);
 #else
 	HANDLE h;
-	for (DWORD start_time = GetTickCount();;)
+	for (s_tick_t start_time = GetLocalTickCount();;)
 	{
 		// Known failure conditions:
 		// GetClipboardData() apparently fails when the text on the clipboard is greater than a certain size
@@ -449,7 +449,7 @@ HANDLE Clipboard::GetClipboardDataTimeout(UINT uFormat, BOOL *aNullIsOkay)
 
 		if (g_ClipboardTimeout != -1) // We were not told to wait indefinitely and...
 			if (!g_ClipboardTimeout   // ...we were told to make only one attempt, or ...
-				|| (int)(g_ClipboardTimeout - (GetTickCount() - start_time)) <= SLEEP_INTERVAL_HALF) //...it timed out.
+				|| (int)(g_ClipboardTimeout - (GetLocalTickCount() - start_time)) <= SLEEP_INTERVAL_HALF) //...it timed out.
 				// Above must cast to int or any negative result will be lost due to DWORD type.
 				return NULL;
 
@@ -468,7 +468,7 @@ ResultType Clipboard::Open()
 {
 	if (mIsOpen)
 		return OK;
-	for (DWORD start_time = GetTickCount();;)
+	for (s_tick_t start_time = GetLocalTickCount();;)
 	{
 		if (OpenClipboard(g_hWnd))
 		{
@@ -477,7 +477,7 @@ ResultType Clipboard::Open()
 		}
 		if (g_ClipboardTimeout != -1) // We were not told to wait indefinitely...
 			if (!g_ClipboardTimeout   // ...and we were told to make only one attempt, or ...
-				|| (int)(g_ClipboardTimeout - (GetTickCount() - start_time)) <= SLEEP_INTERVAL_HALF) //...it timed out.
+				|| (int)(g_ClipboardTimeout - (GetLocalTickCount() - start_time)) <= SLEEP_INTERVAL_HALF) //...it timed out.
 				// Above must cast to int or any negative result will be lost due to DWORD type.
 				return FAIL;
 		// Use SLEEP_WITHOUT_INTERRUPTION to prevent MainWindowProc() from accepting new hotkeys

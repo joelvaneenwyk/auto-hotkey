@@ -240,7 +240,7 @@ LRESULT CALLBACK LowLevelMouseProc(int aCode, WPARAM wParam, LPARAM lParam)
 	//event.flags &= ~LLMHF_INJECTED;
 
 	if (!(event.flags & LLMHF_INJECTED)) // Physical mouse movement or button action (uses LLMHF vs. LLKHF).
-		g_TimeLastInputPhysical = g_TimeLastInputMouse = GetTickCount();
+		g_TimeLastInputPhysical = g_TimeLastInputMouse = GetLocalTickCount();
 		// Above: Don't use event.time, mostly because SendInput can produce invalid timestamps on such events
 		// (though in truth, that concern isn't valid because SendInput's input isn't marked as physical).
 		// Another concern is the comments at the other update of "g_TimeLastInputPhysical" elsewhere in this file.
@@ -323,7 +323,7 @@ LRESULT LowLevelCommon(const HHOOK aHook, int aCode, WPARAM wParam, LPARAM lPara
 			g_KeyHistoryNext = 0;
 		pKeyHistoryCurr->vk = aVK; // aSC is done later below.
 		pKeyHistoryCurr->key_up = aKeyUp;
-		g_HistoryTickNow = GetTickCount();
+		g_HistoryTickNow = GetLocalTickCount();
 		pKeyHistoryCurr->elapsed_time = (g_HistoryTickNow - g_HistoryTickPrev) / (float)1000;
 		g_HistoryTickPrev = g_HistoryTickNow;
 		HWND fore_win = GetForegroundWindow();
@@ -3221,7 +3221,7 @@ void UpdateKeybdState(KBDLLHOOKSTRUCT &aEvent, const vk_type aVK, const sc_type 
 			}
 			// See comments in GetModifierLRState() for details about the following.
 			g_modifiersLR_last_pressed = modLR;
-			g_modifiersLR_last_pressed_time = GetTickCount();
+			g_modifiersLR_last_pressed_time = GetLocalTickCount();
 		}
 	} // vk is a modifier key.
 }
@@ -3258,12 +3258,12 @@ bool KeybdEventIsPhysical(DWORD aEventFlags, const vk_type aVK, bool aKeyUp)
 	// for AltGr keyboard layouts that generate LControl events when RAlt is pressed (but in such cases, I think
 	// it's only sometimes zero, not always).  It might also occur during simulation of Alt+Numpad keystrokes
 	// to support {Asc NNNN}.  In addition, SendInput() is documented to have the ability to set its own timestamps;
-	// if it's callers put in a bad timestamp, it will probably arrive here that way too.  Thus, use GetTickCount().
+	// if it's callers put in a bad timestamp, it will probably arrive here that way too.  Thus, use GetLocalTickCount().
 	// More importantly, when a script or other application simulates an AltGr keystroke (either down or up),
 	// the LControl event received here is marked as physical by the OS or keyboard driver.  This is undesirable
 	// primarily because it makes g_TimeLastInputPhysical inaccurate, but also because falsely marked physical
 	// events can impact the script's calls to GetKeyState("LControl", "P"), etc.
-	g_TimeLastInputPhysical = g_TimeLastInputKeyboard = GetTickCount();
+	g_TimeLastInputPhysical = g_TimeLastInputKeyboard = GetLocalTickCount();
 	return true;
 }
 
@@ -4118,9 +4118,10 @@ void AddRemoveHooks(HookType aHooksToBeActive, bool aChangeIsTemporary)
 	// hook state being in effect immediately.  For example, the Input command installs the keyboard
 	// hook and it's more maintainable if we ensure the status is correct prior to returning.
 	MSG msg;
-	DWORD exit_code, start_time;
+	DWORD exit_code;
+	s_tick_t start_time;
 	bool problem_activating_hooks;
-	for (problem_activating_hooks = false, start_time = GetTickCount();;) // For our caller, wait for hook thread to update the status of the hooks.
+	for (problem_activating_hooks = false, start_time = GetLocalTickCount();;) // For our caller, wait for hook thread to update the status of the hooks.
 	{
 		if (aHooksToBeActive) // Wait for the hook thread to activate the specified hooks.
 		{
@@ -4170,7 +4171,7 @@ void AddRemoveHooks(HookType aHooksToBeActive, bool aChangeIsTemporary)
 				}
 			}
 		}
-		if (GetTickCount() - start_time > 500) // DWORD subtraction yields correct result even when TickCount has wrapped.
+		if (GetLocalTickCount() - start_time > 500) // DWORD subtraction yields correct result even when TickCount has wrapped.
 			break;
 		// v1.0.43: The following sleeps for 0 rather than some longer time because:
 		// 1) In nearly all cases, this loop should do only one iteration because a Sleep(0) should guarantee

@@ -54,10 +54,22 @@ system files. */
 
 #define SLJIT_MALLOC(size) (PUBL(malloc))(size)
 #define SLJIT_FREE(ptr) (PUBL(free))(ptr)
-#define SLJIT_CONFIG_AUTO 1
-#define SLJIT_CONFIG_STATIC 1
-#define SLJIT_VERBOSE 0
-#define SLJIT_DEBUG 0
+
+#ifndef SLJIT_CONFIG_AUTO
+    #define SLJIT_CONFIG_AUTO 1
+#endif
+
+#ifndef SLJIT_CONFIG_STATIC
+    #define SLJIT_CONFIG_STATIC 1
+#endif
+
+#ifndef SLJIT_VERBOSE
+    #define SLJIT_VERBOSE 0
+#endif
+
+#ifndef SLJIT_DEBUG
+    #define SLJIT_DEBUG 0
+#endif
 
 #include "sljit/sljitLir.c"
 
@@ -188,7 +200,7 @@ typedef int (SLJIT_CALL *jit_function)(jit_arguments *args);
 
 /* The following structure is the key data type for the recursive
 code generator. It is allocated by compile_hotpath, and contains
-the aguments for compile_fallbackpath. Must be the first member
+the arguments for compile_fallbackpath. Must be the first member
 of its descendants. */
 typedef struct fallback_common {
   /* Concatenation stack. */

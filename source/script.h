@@ -14,8 +14,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef script_h
-#define script_h
+#ifndef _SCRIPT_H_
+#define _SCRIPT_H_
 
 #include "stdafx.h" // pre-compiled headers
 #include "defines.h"
@@ -339,7 +339,7 @@ struct CallSite
 	int flags = IT_CALL;
 	int param_count = 0;
 	
-	bool is_variadic() { return flags & EIF_VARIADIC; }
+	bool is_variadic() const { return flags & EIF_VARIADIC; }
 	void is_variadic(bool b) { if (b) flags |= EIF_VARIADIC; else flags &= ~EIF_VARIADIC; }
 	
 	void *operator new(size_t aBytes) {return SimpleHeap::Alloc(aBytes);}
@@ -781,7 +781,7 @@ public:
 	// worst case where the buffer size is exceeded, the text is simply truncated, so it's not too bad:
 	#define LINE_LOG_SIZE 400  // See above.
 	static Line *sLog[LINE_LOG_SIZE];
-	static DWORD sLogTick[LINE_LOG_SIZE];
+	static s_tick_t sLogTick[LINE_LOG_SIZE];
 	static int sLogNext;
 
 #ifdef AUTOHOTKEYSC  // Reduces code size to omit things that are unused, and helps catch bugs at compile-time.
@@ -1184,7 +1184,7 @@ public:
 	static UINT ConvertFileEncoding(ExprTokenType &aToken);
 
 	static LPTSTR LogToText(LPTSTR aBuf, int aBufSize);
-	LPTSTR ToText(LPTSTR aBuf, int aBufSize, bool aCRLF, DWORD aElapsed = 0, bool aLineWasResumed = false, bool aLineNumber = true);
+	LPTSTR ToText(LPTSTR aBuf, int aBufSize, bool aCRLF, s_tick_t aElapsed = 0, bool aLineWasResumed = false, bool aLineNumber = true);
 
 	ResultType PreparseError(LPTSTR aErrorText, LPTSTR aExtraInfo = _T(""));
 	// Call this LineError to avoid confusion with Script's error-displaying functions:
@@ -1837,7 +1837,7 @@ class ScriptTimer
 public:
 	IObjectRef mCallback;
 	DWORD mPeriod; // v1.0.36.33: Changed from int to DWORD to double its capacity.
-	DWORD mTimeLastRun;  // TickCount
+	s_tick_t mTimeLastRun;  // TickCount
 	int mPriority;  // Thread priority relative to other threads, default 0.
 	UCHAR mExistingThreads;  // Whether this timer is already running its subroutine.
 	UCHAR mDeleteLocked;     // Lock count to prevent full deletion.  Separate to mExistingThreads so it doesn't prevent timer execution.
@@ -1895,7 +1895,7 @@ public:
 	ResultType Call(ExprTokenType *aParamValue, int aParamCount, UINT aMsg, UCHAR aMsgType, GuiType *aGui, INT_PTR *aRetVal = NULL); // Used by GUI.
 
 	MsgMonitorStruct& operator[] (const int aIndex) { return mMonitor[aIndex]; }
-	int Count() { return mCount; }
+	int Count() const { return mCount; }
 	BOOL IsMonitoring(UINT aMsg, UCHAR aMsgType = 0);
 	BOOL IsMonitoringGuiMsg();
 	BOOL IsRunning(UINT aMsg, UCHAR aMsgType = 0);
@@ -2192,7 +2192,7 @@ private:
 		size_t size = 0;
 		const size_t INITIAL_SIZE = 0x1000; // # characters for first allocation. Subsequent Reallocs will grow exponentially.
 		const size_t RESERVED_SPACE = 3; // Allow for a null-terminator and appending "()" for call statements.
-		size_t Capacity() { ASSERT(size); return size - RESERVED_SPACE; }
+		size_t Capacity() const { ASSERT(size); return size - RESERVED_SPACE; }
 		ResultType Expand();
 		ResultType EnsureCapacity(size_t aLength);
 		ResultType Realloc(size_t aNewSize);
@@ -2246,7 +2246,7 @@ public:
 	UserMenu *mFirstMenu, *mLastMenu;
 	UINT mMenuCount;
 
-	DWORD mThisHotkeyStartTime, mPriorHotkeyStartTime;  // Tickcount timestamp of when its subroutine began.
+	s_tick_t mThisHotkeyStartTime, mPriorHotkeyStartTime;  // Tickcount timestamp of when its subroutine began.
 	TCHAR mEndChar;  // The ending character pressed to trigger the most recent non-auto-replace hotstring.
 	modLR_type mThisHotkeyModifiersLR;
 	LPTSTR mFileSpec; // Will hold the full filespec, for convenience.
@@ -2276,7 +2276,7 @@ public:
 
 	int mUninterruptedLineCountMax; // 32-bit for performance (since huge values seem unnecessary here).
 	int mUninterruptibleTime;
-	DWORD mLastPeekTime;
+	s_tick_t mLastPeekTime;
 
 	CStringW mRunAsUser, mRunAsPass, mRunAsDomain;
 
@@ -2326,7 +2326,7 @@ public:
 	ResultType UpdateOrCreateTimer(IObject *aCallback
 		, bool aUpdatePeriod, __int64 aPeriod, bool aUpdatePriority, int aPriority);
 	void DeleteTimer(IObject *aCallback);
-	LPTSTR DefaultDialogTitle();
+	LPTSTR DefaultDialogTitle() const;
 	UserFunc* CreateHotFunc();
 	ResultType DefineFunc(LPTSTR aBuf, bool aStatic = false, FuncDefType aIsInExpression = FuncDefNormal);
 #ifndef AUTOHOTKEYSC
@@ -2412,7 +2412,7 @@ public:
 				return mi;
 		return NULL;
 	}
-	UserMenuItem *FindMenuItemBySubmenu(HMENU aSubmenu) // L26: Used by WM_MEASUREITEM/WM_DRAWITEM to find the menu item with an associated submenu. Fixes icons on such items when owner-drawn menus are in use.
+	UserMenuItem *FindMenuItemBySubmenu(HMENU aSubmenu) const // L26: Used by WM_MEASUREITEM/WM_DRAWITEM to find the menu item with an associated submenu. Fixes icons on such items when owner-drawn menus are in use.
 	{
 		UserMenuItem *mi;
 		for (UserMenu *m = mFirstMenu; m; m = m->mNextMenu)
@@ -2754,5 +2754,4 @@ bool LibNotifyProblem(ExprTokenType &aProblem);
 bool LibNotifyProblem(LPCTSTR aMessage, LPCTSTR aExtra, Line *aLine, bool aWarn = false);
 #endif
 
-#endif
-
+#endif // _SCRIPT_H_

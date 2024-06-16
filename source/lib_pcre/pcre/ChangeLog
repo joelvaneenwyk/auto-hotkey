@@ -1457,7 +1457,7 @@ Version 7.7 07-May-08
 18. Changed CMakeLists.txt and cmake/FindReadline.cmake to arrange for the
     ncurses library to be included for pcretest when ReadLine support is
     requested, but also to allow for it to be overridden. This patch came from
-    Daniel Bergström.
+    Daniel Bergstrï¿½m.
 
 19. There was a typo in the file ucpinternal.h where f0_rangeflag was defined
     as 0x00f00000 instead of 0x00800000. Luckily, this would not have caused
@@ -4056,7 +4056,7 @@ Version 3.2 12-May-00
 
 This is purely a bug fixing release.
 
-1. If the pattern /((Z)+|A)*/ was matched agained ZABCDEFG it matched Z instead
+1. If the pattern /((Z)+|A)*/ was matched against ZABCDEFG it matched Z instead
 of ZA. This was just one example of several cases that could provoke this bug,
 which was introduced by change 9 of version 2.00. The code for breaking
 infinite loops after an iteration that matches an empty string was't working

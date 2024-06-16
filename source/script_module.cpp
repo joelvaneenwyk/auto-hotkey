@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "script.h"
 #include "globaldata.h"
-
+#include "script_module.h"
 
 Object *ScriptModule::sPrototype;
 
@@ -153,6 +153,7 @@ ResultType Script::ResolveImports(ScriptImport &imp)
 
 	if (  !(imp.mod = mModules.Find(mod_name))  )
 	{
+#ifndef AUTOHOTKEYSC
 		if (auto path = FindLibraryFile(mod_name, _tcslen(mod_name), true))
 		{
 			auto cur_mod = mCurrentModule;
@@ -170,6 +171,7 @@ ResultType Script::ResolveImports(ScriptImport &imp)
 		}
 		else
 			return ScriptError(_T("Module not found"), mod_name);
+#endif
 	}
 
 	if (var_name)
