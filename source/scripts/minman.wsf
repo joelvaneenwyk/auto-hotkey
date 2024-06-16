@@ -35,6 +35,6 @@ try {
 	WScript.Echo("Finished processing manifest: '" + dest + "'");
 }
 catch (ex) {
-	WScript.Echo("Error in 'minman.js' script: '" + ex.message + "'");
+	WScript.Echo("Error in 'minman.wsf' script: '" + ex.message + "'");
 	WScript.Quit(1);
 }
