@@ -397,7 +397,7 @@ HWND WinClose(HWND aWnd, int aTimeToWaitForClose, bool aKillIfHung)
 	// action can be taken (which may often be nearly instantaneous, perhaps under
 	// 1ms for a Window to be logically destroyed even if it hasn't physically been
 	// removed from the screen?) prior to returning the CPU to our thread:
-	DWORD start_time = GetTickCount(); // Before doing any MsgSleeps, set this.
+	s_tick_t start_time = GetLocalTickCount(); // Before doing any MsgSleeps, set this.
     //MsgSleep(0); // Always do one small one, see above comments.
 	// UPDATE: It seems better just to always do one unspecified-interval sleep
 	// rather than MsgSleep(0), which often returns immediately, probably having
@@ -417,7 +417,7 @@ HWND WinClose(HWND aWnd, int aTimeToWaitForClose, bool aKillIfHung)
 		if (!IsWindow(aWnd)) // It's gone, so we're done.
 			return aWnd;
 		// Must cast to int or any negative result will be lost due to DWORD type:
-		if ((int)(aTimeToWaitForClose - (GetTickCount() - start_time)) <= SLEEP_INTERVAL_HALF)
+		if ((int)(aTimeToWaitForClose - (GetLocalTickCount() - start_time)) <= SLEEP_INTERVAL_HALF)
 			break;
 			// Last param 0 because we don't want it to restore the
 			// current active window after the time expires (in case
@@ -715,7 +715,7 @@ FResult StatusBarUtil(HWND aWindow, int aPartNumber, StrRet *aRetVal
 
 	// Always do the first iteration so that at least one check is done.  Also,  start_time is initialized
 	// unconditionally in the name of code size reduction (it's a low overhead call):
-	for (*local_buf = '\0', start_time = GetTickCount();;)
+	for (*local_buf = '\0', start_time = GetLocalTickCount();;)
 	{
 		// MSDN recommends always checking the length of the bar text.  It implies that the length is
 		// unrestricted, so a crash due to buffer overflow could otherwise occur:
@@ -757,7 +757,7 @@ FResult StatusBarUtil(HWND aWindow, int aPartNumber, StrRet *aRetVal
 		// Don't continue to wait if the status bar no longer exists (which is usually caused
 		// by the parent window having been destroyed).
 		if (   IsWindow(aBarHwnd)
-			&& (aWaitTime < 0 || (int)(aWaitTime - (GetTickCount() - start_time)) > SLEEP_INTERVAL_HALF)   )
+			&& (aWaitTime < 0 || (int)(aWaitTime - (GetLocalTickCount() - start_time)) > SLEEP_INTERVAL_HALF)   )
 			MsgSleep(aCheckInterval);
 		else // Timed out.
 			return FALSE; // Indicate "timeout".

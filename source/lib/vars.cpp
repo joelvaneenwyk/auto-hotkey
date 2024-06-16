@@ -197,11 +197,11 @@ VarSizeType GetDateTimeBIV(LPTSTR aBuf, LPTSTR aVarName)
 	// the last fetch of one of these built-in time variables.  This keeps the variables in
 	// sync with one another when they are used consecutively such as this example:
 	// Var := A_Hour ':' A_Min ':' A_Sec
-	// Using GetTickCount() because it's very low overhead compared to the other time functions:
-	static DWORD sLastUpdate = 0; // Static should be thread + recursion safe in this case.
+	// Using GetLocalTickCount() because it's very low overhead compared to the other time functions:
+	static s_tick_t sLastUpdate = 0; // Static should be thread + recursion safe in this case.
 	static SYSTEMTIME sST = {0}; // Init to detect when it's empty.
 	BOOL is_msec = !_tcsicmp(aVarName, _T("MSec")); // Always refresh if it's milliseconds, for better accuracy.
-	DWORD now_tick = GetTickCount();
+	s_tick_t now_tick = GetLocalTickCount();
 	if (is_msec || now_tick - sLastUpdate > 50 || !sST.wYear) // See comments above.
 	{
 		GetLocalTime(&sST);
@@ -843,7 +843,7 @@ BIV_DECL_R(BIV_AhkPath)
 
 BIV_DECL_R(BIV_TickCount)
 {
-	_f_return(GetTickCount64());
+	_f_return(GetLocalTickCount());
 }
 
 
@@ -1388,12 +1388,12 @@ BIV_DECL_R(BIV_TimeSinceThisHotkey)
 	// value to be "in sync" with the value of ThisHotkey itself (i.e. use the same method
 	// to determine which hotkey is the "this" hotkey):
 	if (*g_script.mThisHotkeyName)
-		// Even if GetTickCount()'s TickCount has wrapped around to zero and the timestamp hasn't,
+		// Even if GetLocalTickCount()'s TickCount has wrapped around to zero and the timestamp hasn't,
 		// DWORD subtraction still gives the right answer as long as the number of days between
 		// isn't greater than about 49.  See MyGetTickCount() for explanation of %d vs. %u.
 		// Update: Using 64-bit ints now, so above is obsolete:
-		//sntprintf(str, sizeof(str), "%d", (DWORD)(GetTickCount() - g_script.mThisHotkeyStartTime));
-		_f_return_i((__int64)(GetTickCount() - g_script.mThisHotkeyStartTime));
+		//sntprintf(str, sizeof(str), "%d", (DWORD)(GetLocalTickCount() - g_script.mThisHotkeyStartTime));
+		_f_return_i((__int64)(GetLocalTickCount() - g_script.mThisHotkeyStartTime));
 	else
 		_f_return_empty; // Cause any attempt at math to throw.
 }
@@ -1402,8 +1402,8 @@ BIV_DECL_R(BIV_TimeSincePriorHotkey)
 {
 	if (*g_script.mPriorHotkeyName)
 		// See MyGetTickCount() for explanation for explanation:
-		//sntprintf(str, sizeof(str), "%d", (DWORD)(GetTickCount() - g_script.mPriorHotkeyStartTime));
-		_f_return_i((__int64)(GetTickCount() - g_script.mPriorHotkeyStartTime));
+		//sntprintf(str, sizeof(str), "%d", (DWORD)(GetLocalTickCount() - g_script.mPriorHotkeyStartTime));
+		_f_return_i((__int64)(GetLocalTickCount() - g_script.mPriorHotkeyStartTime));
 	else
 		_f_return_empty; // Cause any attempt at math to throw.
 }
@@ -1435,7 +1435,7 @@ BIV_DECL_R(BIV_TimeIdle)
 // hotkey.h and globaldata.h, which can't be easily included in script.h due to
 // mutual dependency issues.
 {
-	DWORD time_last_input = 0;
+	s_tick_t time_last_input = 0;
 	switch (toupper(aVarName[10]))
 	{
 	case 'M': time_last_input = g_MouseHook ? g_TimeLastInputMouse : 0; break;
@@ -1452,5 +1452,5 @@ BIV_DECL_R(BIV_TimeIdle)
 		else // This is rare; the possibility isn't even documented as of 2020-06-11.
 			_f_return_empty; // Cause any attempt at math to throw.
 	}
-	_f_return_i(GetTickCount() - time_last_input);
+	_f_return_i(GetLocalTickCount() - time_last_input);
 }

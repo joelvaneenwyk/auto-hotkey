@@ -50,7 +50,7 @@ modLR_type g_modifiersLR_physical = 0;
 modLR_type g_modifiersLR_numpad_mask = 0;
 modLR_type g_modifiersLR_ctrlaltdel_mask = 0;
 modLR_type g_modifiersLR_last_pressed = 0;
-DWORD g_modifiersLR_last_pressed_time;
+s_tick_t g_modifiersLR_last_pressed_time;
 
 #ifdef FUTURE_USE_MOUSE_BUTTONS_LOGICAL
 WORD g_mouse_buttons_logical = 0;
@@ -95,7 +95,7 @@ int g_nLayersNeedingTimer = 0;
 int g_nThreads = 0;
 int g_nPausedThreads = 0;
 int g_MaxHistoryKeys = 40;
-DWORD g_InputTimeoutAt = 0;
+s_tick_t g_InputTimeoutAt = 0;
 
 UCHAR g_MaxThreadsPerHotkey = 1;
 int g_MaxThreadsTotal = MAX_THREADS_DEFAULT;
@@ -464,11 +464,11 @@ int g_KeyHistoryNext = 0;
 // in addition to KeyEvent() when it's logging keys with only the mouse hook installed,
 // MUST refer to the same variables.  Otherwise, the elapsed time between keyboard and
 // and mouse events will be wrong:
-DWORD g_HistoryTickNow = 0;
-DWORD g_HistoryTickPrev = GetTickCount();  // So that the first logged key doesn't have a huge elapsed time.
+s_tick_t g_HistoryTickNow = 0;
+s_tick_t g_HistoryTickPrev = GetLocalTickCount();  // So that the first logged key doesn't have a huge elapsed time.
 HWND g_HistoryHwndPrev = NULL;
 
 // Also hook related:
-DWORD g_TimeLastInputPhysical = GetTickCount();
-DWORD g_TimeLastInputKeyboard = g_TimeLastInputPhysical;
-DWORD g_TimeLastInputMouse = g_TimeLastInputPhysical;
+s_tick_t g_TimeLastInputPhysical = GetLocalTickCount();
+s_tick_t g_TimeLastInputKeyboard = g_TimeLastInputPhysical;
+s_tick_t g_TimeLastInputMouse = g_TimeLastInputPhysical;

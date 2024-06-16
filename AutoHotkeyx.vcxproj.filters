@@ -91,9 +91,6 @@
     <ClCompile Include="source\pch.cpp">
       <Filter>Build &amp; debug</Filter>
     </ClCompile>
-    <ClCompile Include="source\pch_min.cpp">
-      <Filter>Build &amp; debug</Filter>
-    </ClCompile>
     <ClCompile Include="source\ahkversion.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>

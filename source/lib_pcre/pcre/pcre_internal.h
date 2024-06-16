@@ -2340,6 +2340,16 @@ extern const int         PRIV(ucp_typerange)[];
 #define UCD_CATEGORY(ch)  PRIV(ucp_gentype)[UCD_CHARTYPE(ch)]
 #define UCD_OTHERCASE(ch) (ch + GET_UCD(ch)->other_case)
 
+#else
+
+#define UCD_BLOCK_SIZE 0
+#define GET_UCD(ch) ((const ucd_record *)NULL)
+
+#define UCD_CHARTYPE(ch)  0
+#define UCD_SCRIPT(ch)    NULL
+#define UCD_CATEGORY(ch)  NULL
+#define UCD_OTHERCASE(ch) (ch)
+
 #endif /* SUPPORT_UCP */
 
 #endif
