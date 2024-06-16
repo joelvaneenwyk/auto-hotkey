@@ -49,6 +49,7 @@ set(AHK_COMMON_SOURCE_FILES
     ${AHK_SOURCE_DIR}/script_expression.cpp
     ${AHK_SOURCE_DIR}/script_gui.cpp
     ${AHK_SOURCE_DIR}/script_menu.cpp
+    ${AHK_SOURCE_DIR}/script_module.cpp
     ${AHK_SOURCE_DIR}/script_object_bif.cpp
     ${AHK_SOURCE_DIR}/script_object.cpp
     ${AHK_SOURCE_DIR}/script_registry.cpp
