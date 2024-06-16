@@ -12,7 +12,7 @@ setlocal EnableDelayedExpansion
     set "_command=!_command:  = !"
     echo ##[cmd] !_command!
     call !_command! >"!_log!" 2>&1
-    more "!_log!"
+    type "!_log!"
 exit /b %errorlevel%
 
 :MSBuild
