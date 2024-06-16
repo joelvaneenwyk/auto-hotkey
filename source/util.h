@@ -27,23 +27,22 @@ GNU General Public License for more details.
 #define Exp32or64(exp32, exp64) (exp32)
 #endif
 
-
 #ifdef UNICODE
 #define tmemcpy			wmemcpy
 #define tmemmove		wmemmove
 #define tmemset			wmemset
 #define tmemcmp			wmemcmp
-#define tmalloc(c)		((LPTSTR) malloc((c) << 1))
-#define trealloc(p, c)	((LPTSTR) realloc((p), (c) << 1))
-#define talloca(c)		((LPTSTR) _alloca((c) << 1))
+#define tmalloc(c)		reinterpret_cast<LPTSTR>(malloc(static_cast<size_t>(c) << 1))
+#define trealloc(p, c)	reinterpret_cast<LPTSTR>(realloc((p), static_cast<size_t>(c) << 1))
+#define talloca(c)		reinterpret_cast<LPTSTR>(_alloca(static_cast<size_t>(c) << 1))
 #else
 #define tmemcpy			(char*)memcpy
 #define tmemmove		memmove
 #define tmemset			memset
 #define tmemcmp			memcmp
-#define tmalloc(c)		((LPTSTR) malloc(c))
-#define trealloc(p, c)	((LPTSTR) realloc((p), (c)))
-#define talloca(c)		((LPTSTR) _alloca(c))
+#define tmalloc(c)		reinterpret_cast<LPTSTR>(malloc(c))
+#define trealloc(p, c)	reinterpret_cast<LPTSTR>(realloc((p), (c)))
+#define talloca(c)		reinterpret_cast<LPTSTR>(_alloca(c))
 #endif
 
 #define IS_SPACE_OR_TAB(c) (c == ' ' || c == '\t')
@@ -70,7 +69,7 @@ inline int cisctype(TBYTE c, int type)
 inline int cisupper(TBYTE c)  { return c <= 'Z' && c >= 'A'; }
 inline int cislower(TBYTE c)  { return c >= 'a' && c <= 'z'; }
 inline int cisdigit(TBYTE c)  { return c <= '9' && c >= '0'; }
-inline int cisalpha(TBYTE c)  { return cisupper(c) || cislower(c); }
+inline int cisalpha(TBYTE c)  { return cisupper(c) != 0 || cislower(c) != 0; }
 
 inline int cisalnum(TBYTE c)  { return ((c & ~0x7F) ? 0 : isalnum(c)); }
 inline int cisxdigit(TBYTE c) { return ((c & ~0x7F) ? 0 : isxdigit(c)); }
@@ -102,7 +101,7 @@ inline LPTSTR StrToTitleCase(LPTSTR aStr)
 // drop the benchmarks significantly.
 {
 	if (!aStr) return aStr;
-	LPTSTR aStr_orig = aStr;	
+	LPTSTR aStr_orig = aStr;
 	for (bool convert_next_alpha_char_to_upper = true; *aStr; ++aStr)
 	{
 		if (IsCharAlpha(*aStr)) // Use this to better support chars from non-English languages.
@@ -381,7 +380,7 @@ inline LPTSTR strip_quote_marks(LPTSTR aBuf)
 	if (!aBuf || !(*aBuf == '"' || *aBuf == '\''))
 		return aBuf;
 	LPTSTR end = _tcschr(aBuf + 1, '\0');
-	if (end[-1] != *aBuf)
+	if (!end || end[-1] != *aBuf)
 		return aBuf;
 	end[-1] = '\0';
 	return aBuf + 1;
@@ -467,7 +466,7 @@ inline __int64 ATOI64(LPCTSTR buf)
 	//  9223372036854775807+1 == 9223372036854775808
 	//   0xFFFFFFFFFFFFFFFF == -1
 	//  0x10000000000000001 ==  1
-	//return IsHex(buf) ? _tcstoi64(buf, NULL, 16) : _ttoi64(buf);  
+	//return IsHex(buf) ? _tcstoi64(buf, NULL, 16) : _ttoi64(buf);
 	return nstrtoi64(buf);
 }
 
@@ -645,7 +644,7 @@ inline char* WideToUTF8(LPCWSTR str){
 }
 inline LPTSTR UTF8ToWide(LPCSTR str){
 	int buf_len = UTF8ToWideChar(str, NULL, 0);
-	LPTSTR buf = (LPTSTR) tmalloc(buf_len);
+	LPTSTR buf = tmalloc(buf_len);
 	if (buf) UTF8ToWideChar(str, buf, buf_len);
 	return buf;
 }
@@ -675,7 +674,7 @@ inline LPTSTR UTF8ToWide(LPCSTR str){
 // is meaningful only to people who use more than one keyboard layout.  In the case of hotstrings:
 // It seems that the vast majority of them would want the Hotstring monitoring to adhere to the active
 // window's current keyboard layout rather than the script's.  This change is somewhat less certain to
-// be desirable unconditionally for the Input command (especially invisible/non-V-option Inputs); but it 
+// be desirable unconditionally for the Input command (especially invisible/non-V-option Inputs); but it
 // seems best to use the same approach to avoid calling ToAsciiEx() more than once in cases where a
 // script has hotstrings and also uses the Input command. Calling ToAsciiEx() twice in such a case would
 // be likely to aggravate its side effects with dead keys as described at length in the hook/Input code).

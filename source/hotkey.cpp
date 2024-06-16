@@ -24,8 +24,8 @@ GNU General Public License for more details.
 // Initialize static members:
 HookType Hotkey::sWhichHookNeeded = 0;
 HookType Hotkey::sWhichHookAlways = 0;
-DWORD Hotkey::sTimePrev = {0};
-DWORD Hotkey::sTimeNow = {0};
+s_tick_t Hotkey::sTimePrev = {0};
+s_tick_t Hotkey::sTimeNow = {0};
 Hotkey **Hotkey::shk = NULL;
 int Hotkey::shkMax = 0;
 HotkeyIDType Hotkey::sNextID = 0;
@@ -887,13 +887,13 @@ void Hotkey::PerformInNewThreadMadeByCaller(HotkeyVariant &aVariant)
 
 	// Help prevent runaway hotkeys (infinite loops due to recursion in bad script files):
 	static UINT throttled_key_count = 0;  // This var doesn't belong in struct since it's used only here.
-	UINT time_until_now;
+	s_tick_t time_until_now;
 	int display_warning;
 	if (!sTimePrev)
-		sTimePrev = GetTickCount();
+		sTimePrev = GetLocalTickCount();
 
 	++throttled_key_count;
-	sTimeNow = GetTickCount();
+	sTimeNow = GetLocalTickCount();
 	// Calculate the amount of time since the last reset of the sliding interval.
 	// Note: A tickcount in the past can be subtracted from one in the future to find
 	// the true difference between them, even if the system's uptime is greater than
@@ -969,7 +969,7 @@ void Hotkey::PerformInNewThreadMadeByCaller(HotkeyVariant &aVariant)
 		// But MsgSleep() can change it back to true again, when called by the above call
 		// to ExecUntil(), to keep it auto-repeating:
 		aVariant.mRunAgainAfterFinished = false;  // i.e. this "run again" ticket has now been used up.
-		if (GetTickCount() - aVariant.mRunAgainTime <= 1000)
+		if (GetLocalTickCount() - aVariant.mRunAgainTime <= 1000)
 		{
 			// v1.0.44.14: Post a message rather than directly running the above ExecUntil again.
 			// This fixes unreported bugs in previous versions where the thread isn't reinitialized before

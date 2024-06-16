@@ -48,7 +48,7 @@ extern modLR_type g_modifiersLR_physical;  // Same as above except it's which mo
 extern modLR_type g_modifiersLR_numpad_mask;  // Shift keys temporarily released by Numpad.
 extern modLR_type g_modifiersLR_ctrlaltdel_mask; // For excluding AltGr from Ctrl+Alt+Del handling.
 extern modLR_type g_modifiersLR_last_pressed;
-extern DWORD g_modifiersLR_last_pressed_time;
+extern s_tick_t g_modifiersLR_last_pressed_time;
 
 extern key_type *pPrefixKey;
 
@@ -91,7 +91,7 @@ extern int g_nLayersNeedingTimer;
 extern int g_nThreads;
 extern int g_nPausedThreads;
 extern int g_MaxHistoryKeys;
-extern DWORD g_InputTimeoutAt;
+extern s_tick_t g_InputTimeoutAt;
 
 extern UCHAR g_MaxThreadsPerHotkey;
 extern int g_MaxThreadsTotal;
@@ -190,12 +190,12 @@ extern int g_key_to_sc_count;
 
 extern KeyHistoryItem *g_KeyHistory;
 extern int g_KeyHistoryNext;
-extern DWORD g_HistoryTickNow;
-extern DWORD g_HistoryTickPrev;
+extern s_tick_t g_HistoryTickNow;
+extern s_tick_t  g_HistoryTickPrev;
 extern HWND g_HistoryHwndPrev;
-extern DWORD g_TimeLastInputPhysical;
-extern DWORD g_TimeLastInputKeyboard;
-extern DWORD g_TimeLastInputMouse;
+extern s_tick_t g_TimeLastInputPhysical;
+extern s_tick_t g_TimeLastInputKeyboard;
+extern s_tick_t g_TimeLastInputMouse;
 
 
 // 9 might be better than 10 because if the granularity/timer is a little
@@ -203,7 +203,7 @@ extern DWORD g_TimeLastInputMouse;
 // whereas a Sleep(9) is almost certainly a Sleep(10) on OS's such as
 // NT/2k/XP.  UPDATE: Roundoff issues with scripts having
 // even multiples of 10 in them, such as "Sleep,300", shouldn't be hurt
-// by this because they use GetTickCount() to verify how long the
+// by this because they use GetLocalTickCount() to verify how long the
 // sleep duration actually was.  UPDATE again: Decided to go back to 10
 // because I'm pretty confident that that always sleeps 10 on NT/2k/XP
 // unless the system is under load, in which case any Sleep between 0
@@ -216,8 +216,8 @@ extern DWORD g_TimeLastInputMouse;
 // and also because it may degrade overall system performance.
 // UPDATE: Will get rounded up to 10 anyway by SetTimer().  However,
 // future OSs might support timer intervals of less than 10.
-#define SLEEP_INTERVAL 10
-#define SLEEP_INTERVAL_HALF (int)(SLEEP_INTERVAL / 2)
+constexpr s_duration_t SLEEP_INTERVAL = 10;
+constexpr s_duration_t SLEEP_INTERVAL_HALF = SLEEP_INTERVAL / 2;
 
 enum OurTimers {TIMER_ID_MAIN = MAX_MSGBOXES + 2 // The first timers in the series are used by the MessageBoxes.  Start at +2 to give an extra margin of safety.
 	, TIMER_ID_UNINTERRUPTIBLE // Obsolete but kept as a a placeholder for backward compatibility, so that this and the other the timer-ID's stay the same, and so that obsolete IDs aren't reused for new things (in case anyone is interfacing these OnMessage() or with external applications).
@@ -272,14 +272,14 @@ if (!g_MainTimerExists)\
 #define SET_AUTOEXEC_TIMER(aTimeoutValue) \
 {\
 	g->AllowThreadToBeInterrupted = false;\
-	g->ThreadStartTime = GetTickCount();\
+	g->ThreadStartTime = GetLocalTickCount();\
 	g->UninterruptibleDuration = aTimeoutValue;\
 }
 
 #define SET_INPUT_TIMER(aTimeoutValue, aTimeoutAt) \
 { \
-g_InputTimeoutAt = aTimeoutAt; \
-g_InputTimerExists = SetTimer(g_hWnd, TIMER_ID_INPUT, aTimeoutValue, InputTimeout); \
+	g_InputTimeoutAt = aTimeoutAt; \
+	g_InputTimerExists = SetTimer(g_hWnd, TIMER_ID_INPUT, static_cast<UINT>(aTimeoutValue), InputTimeout); \
 }
 
 

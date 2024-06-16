@@ -22,7 +22,7 @@ GNU General Public License for more details.
 
 
 
-void MsgSleepWithListLines(int aSleepDuration, Line *waiting_line, DWORD start_time)
+void MsgSleepWithListLines(int aSleepDuration, Line *waiting_line, s_tick_t start_time)
 {
 	if (MsgSleep(aSleepDuration))
 	{
@@ -60,13 +60,13 @@ static bool Wait(int aTimeout, void *aParam, WaitCompletedPredicate aWaitComplet
 {
 	Line *waiting_line = g_script.mCurrLine;
 
-	for (DWORD start_time = GetTickCount();;) // start_time is initialized unconditionally for use with ListLines.
+	for (s_tick_t start_time = GetLocalTickCount();;) // start_time is initialized unconditionally for use with ListLines.
 	{
 		if (aWaitCompleted(aParam))
 			return true;
 
 		// Must cast to int or any negative result will be lost due to DWORD type:
-		if (aTimeout < 0 || (aTimeout - (int)(GetTickCount() - start_time)) > SLEEP_INTERVAL_HALF)
+		if (aTimeout < 0 || (aTimeout - (int)(GetLocalTickCount() - start_time)) > SLEEP_INTERVAL_HALF)
 			MsgSleepWithListLines(INTERVAL_UNSPECIFIED, waiting_line, start_time);
 		else // Done waiting (timed out).
 			return false;
@@ -323,7 +323,7 @@ bif_impl FResult WinWaitNotActive(ExprTokenType *aWinTitle, optl<StrArg> aWinTex
 ResultType RunWait(StrArg aTarget, optl<StrArg> aWorkingDir, optl<StrArg> aOptions, optl<IObject*> aPID, int &aExitCode)
 {
 	Line *waiting_line = g_script.mCurrLine;
-	DWORD start_time = GetTickCount();
+	s_tick_t start_time = GetLocalTickCount();
 
 	HANDLE running_process;
 	if (!g_script.ActionExec(aTarget, NULL, aWorkingDir.value_or_null(), true, aOptions.value_or_null(), &running_process, true, true))

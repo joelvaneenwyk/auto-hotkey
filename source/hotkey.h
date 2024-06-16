@@ -89,7 +89,7 @@ struct HotkeyVariant
 								// during run time.
 	HotkeyCriterion *mHotCriterion;
 	HotkeyVariant *mNextVariant;
-	DWORD mRunAgainTime;
+	s_tick_t mRunAgainTime;
 	int mPriority;
 	// Keep members that are less than 32-bit adjacent to each other to conserve memory in with the default
 	// 4-byte alignment:
@@ -114,8 +114,8 @@ private:
 	// within static data and methods to retain the indexing/performance method:
 	static HookType sWhichHookNeeded;
 	static HookType sWhichHookAlways;
-	static DWORD sTimePrev;
-	static DWORD sTimeNow;
+	static s_tick_t sTimePrev;
+	static s_tick_t sTimeNow;
 	static HotkeyIDType sNextID;
 
 	bool Enable(HotkeyVariant &aVariant) // Returns true if the variant needed to be disabled, in which case caller should generally call ManifestAllHotkeysHotstringsHooks().
@@ -262,7 +262,7 @@ public:
 		return aVariant.mExistingThreads < aVariant.mMaxThreads;
 	}
 
-	bool IsExemptFromSuspend() // A hotkey is considered exempt if even one of its variants is exempt.
+	bool IsExemptFromSuspend() const // A hotkey is considered exempt if even one of its variants is exempt.
 	{
 		// It's the caller's responsibility to check vp->mEnabled; that isn't done here.
 		if (mHookAction) // An alt-tab hotkey (which overrides all its variants) is never exempt.
@@ -274,7 +274,7 @@ public:
 		return false;
 	}
 
-	bool IsCompletelyDisabled()
+	bool IsCompletelyDisabled() const
 	{
 		if (mHookAction) // Alt tab hotkeys are disabled completely if and only if the parent is disabled.
 			return !mParentEnabled;
@@ -288,7 +288,7 @@ public:
 	{
 		if (aVariant.mMaxThreadsBuffer)
 			aVariant.mRunAgainAfterFinished = true;
-		aVariant.mRunAgainTime = GetTickCount();
+		aVariant.mRunAgainTime = GetLocalTickCount();
 		// Above: The time this event was buffered, to make sure it doesn't get too old.
 	}
 

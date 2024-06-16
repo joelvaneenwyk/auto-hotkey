@@ -127,9 +127,9 @@ void input_type::ParseOptions(LPCTSTR aOptions)
 
 void input_type::SetTimeoutTimer()
 {
-	DWORD now = GetTickCount();
+	s_tick_t now = GetLocalTickCount();
 	TimeoutAt = now + Timeout;
-	if (!g_InputTimerExists || Timeout < int(g_InputTimeoutAt - now))
+	if (!g_InputTimerExists || Timeout < s_tick_t(g_InputTimeoutAt - now))
 		SET_INPUT_TIMER(Timeout, TimeoutAt)
 }
 

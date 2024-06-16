@@ -32,7 +32,7 @@
 // Generates warnings to help we check whether the codes are ready to handle Unicode or not.
 //#define CONFIG_UNICODE_CHECK
 
-// This is now defined via Config.vcxproj if supported by the current platform toolset.
+// This is now defined via 'AutoHotkeyx.props' if supported by the current platform toolset.
 //#ifndef _WIN64
 //#define CONFIG_WIN2K
 //#endif

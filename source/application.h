@@ -64,7 +64,7 @@ bool MsgSleep(int aSleepDuration = INTERVAL_UNSPECIFIED, MessageMode aMode = RET
 		MsgSleep(g->ControlDelay);\
 	}
 
-ResultType IsCycleComplete(int aSleepDuration, DWORD aStartTime, bool aAllowEarlyReturn);
+ResultType IsCycleComplete(s_duration_t aSleepDuration, s_tick_t aStartTime, bool aAllowEarlyReturn);
 
 // These should only be called from MsgSleep() (or something called by MsgSleep()) because
 // we don't want to be in the situation where a thread launched by CheckScriptTimers() returns

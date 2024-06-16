@@ -4072,7 +4072,7 @@ ResultType Script::UpdateOrCreateTimer(IObject *aCallback
 		// flexible, e.g. a user might want to create a timer that is triggered 5 seconds from now.
 		// In such a case, we don't want the timer's first triggering to occur immediately.
 		// Instead, we want it to occur only when the full 5 seconds have elapsed:
-		timer->mTimeLastRun = GetTickCount();
+		timer->mTimeLastRun = GetLocalTickCount();
 
     // Below is obsolete, see above for why:
 	// We don't have to kill or set the main timer because the only way this function is called
@@ -6607,8 +6607,6 @@ Object *Script::FindClass(LPCTSTR aClassName, size_t aClassNameLength)
 	return base_object;
 }
 
-
-
 #ifndef AUTOHOTKEYSC
 
 #define FUNC_LIB_EXT EXT_AUTOHOTKEY
@@ -6655,8 +6653,8 @@ void Script::InitFuncLibrary(FuncLibrary &aLib, LPTSTR aPathBase, LPTSTR aPathSu
 	aLib.length = length;
 }
 
-LPTSTR Script::FindLibraryFile(LPTSTR aFuncName, size_t aFuncNameLength, bool aIsModule)
-// If aFuncNameLength is 0, the entire length of aFuncName is used.
+LPTSTR Script::FindLibraryFile(LPTSTR aName, size_t aNameLength, bool aIsModule)
+// If aNameLength is 0, the entire length of aName is used.
 // Returns the path; valid only until the next call to this function.
 {
 	int i;
@@ -6668,14 +6666,14 @@ LPTSTR Script::FindLibraryFile(LPTSTR aFuncName, size_t aFuncNameLength, bool aI
 		InitFuncLibraries(sLib);
 	// Above must ensure that all sLib[].path elements are non-NULL (but they can be "" to indicate "no library").
 
-	if (!aFuncNameLength) // Caller didn't specify, so use the entire string.
-		aFuncNameLength = _tcslen(aFuncName);
-	if (aFuncNameLength > MAX_VAR_NAME_LENGTH) // Too long to fit in the allowed space, and also too long to be a valid function name.
+	if (!aNameLength) // Caller didn't specify, so use the entire string.
+		aNameLength = _tcslen(aName);
+	if (aNameLength > MAX_VAR_NAME_LENGTH) // Too long to fit in the allowed space, and also too long to be a valid function name.
 		return nullptr;
 
 	TCHAR *dest;
-	LPTSTR naked_filename = aFuncName;               // Set up for the first iteration.
-	size_t naked_filename_length = aFuncNameLength; //
+	LPTSTR naked_filename = aName;               // Set up for the first iteration.
+	size_t naked_filename_length = aNameLength; //
 
 		for (i = 0; i < FUNC_LIB_COUNT; ++i)
 		{
@@ -6699,8 +6697,8 @@ LPTSTR Script::FindLibraryFile(LPTSTR aFuncName, size_t aFuncNameLength, bool aI
 	// The legacy behaviour for #Include <A_B> is that all Libs are searched for A_B.ahk before
 	// searching for A.ahk, which means that A_B.ahk takes precedence over A.ahk even if A.ahk
 	// is defined in the local Lib and A_B.ahk is not.
-	if (auto first_underscore = _tcschr(aFuncName, '_'))
-		return FindLibraryFile(aFuncName, first_underscore - aFuncName);
+	if (auto first_underscore = _tcschr(aName, '_'))
+		return FindLibraryFile(aName, first_underscore - aName);
 	return nullptr;
 }
 
@@ -9798,7 +9796,7 @@ ResultType Line::FinalizeExpression(ArgStruct &aArg)
 
 // Init static vars:
 Line *Line::sLog[] = {NULL};  // Initialize all the array elements.
-DWORD Line::sLogTick[]; // No initialization needed.
+s_tick_t Line::sLogTick[]; // No initialization needed.
 int Line::sLogNext = 0;  // Start at the first element.
 
 #ifdef AUTOHOTKEYSC  // Reduces code size to omit things that are unused, and helps catch bugs at compile-time.
@@ -9841,7 +9839,7 @@ void Line::FreeDerefBufIfLarge()
 #define LOG_LINE(line) \
 { \
 	sLog[sLogNext] = line; \
-	sLogTick[sLogNext++] = GetTickCount(); \
+	sLogTick[sLogNext++] = GetLocalTickCount(); \
 	if (sLogNext >= LINE_LOG_SIZE) \
 		sLogNext = 0; \
 }
@@ -9891,7 +9889,7 @@ ResultType Line::ExecUntil(ExecUntilMode aMode, ResultToken *aResultToken, Line 
 		//    in tight script loops even when MsgSleep(-1) or (0) was called every 10ms or so.
 		// 2) The app is maximally responsive while executing in a tight loop.
 		// 3) Hotkeys are maximally responsive.  For example, if a user has game hotkeys, using
-		//    a GetTickCount() method (which very slightly improves performance by cutting back on
+		//    a GetLocalTickCount() method (which very slightly improves performance by cutting back on
 		//    the number of Peek() calls) would introduce up to 10ms of delay before the hotkey
 		//    finally takes effect.  10ms can be significant in games, where ping (latency) itself
 		//    can sometimes be only 10 or 20ms. UPDATE: It looks like PeekMessage() yields CPU time
@@ -10931,12 +10929,12 @@ ResultType HotkeyCriterion::Eval(LPTSTR aHotkeyName)
 
 	// Update A_ThisHotkey, useful if #HotIf calls a function to do its dirty work.
 	LPTSTR prior_hotkey_name[] = { g_script.mThisHotkeyName, g_script.mPriorHotkeyName };
-	DWORD prior_hotkey_time[] = { g_script.mThisHotkeyStartTime, g_script.mPriorHotkeyStartTime };
+	s_tick_t prior_hotkey_time[] = { g_script.mThisHotkeyStartTime, g_script.mPriorHotkeyStartTime };
 	g_script.mPriorHotkeyName = g_script.mThisHotkeyName;			// For consistency
 	g_script.mPriorHotkeyStartTime = g_script.mThisHotkeyStartTime; //
 	g_script.mThisHotkeyName = aHotkeyName;
 	g_script.mThisHotkeyStartTime = // Updated for consistency.
-	g_script.mLastPeekTime = GetTickCount();
+	g_script.mLastPeekTime = GetLocalTickCount();
 
 	// CALL THE CALLBACK
 	ExprTokenType param = aHotkeyName;
@@ -12000,7 +11998,7 @@ LPTSTR Line::LogToText(LPTSTR aBuf, int aBufSize) // aBufSize should be an int t
 #ifndef AUTOHOTKEYSC
 	int last_file_index = -1;
 #endif
-	DWORD elapsed;
+	s_tick_t elapsed;
 	bool this_item_is_special, next_item_is_special;
 
 	// In the below, sLogNext causes it to start at the oldest logged line and continue up through the newest:
@@ -12035,7 +12033,7 @@ LPTSTR Line::LogToText(LPTSTR aBuf, int aBufSize) // aBufSize should be an int t
 					// a line that actually executed, but rather one that is still executing (waiting).
 					next_item_is_special = true; // Override the default.
 					if (i + 2 == lines_to_show) // The line after this one is not only special, but the last one that will be shown, so recalculate this one correctly.
-						elapsed = GetTickCount() - sLogTick[line_index];
+						elapsed = GetLocalTickCount() - sLogTick[line_index];
 					else // Neither this line nor the special one that follows it is the last.
 					{
 						// Refer to the line after the next (special) line to get this line's correct elapsed time.
@@ -12047,7 +12045,7 @@ LPTSTR Line::LogToText(LPTSTR aBuf, int aBufSize) // aBufSize should be an int t
 				}
 			}
 			else // This is the last line (whether special or not), so compare it's time against the current time instead.
-				elapsed = GetTickCount() - sLogTick[line_index];
+				elapsed = GetLocalTickCount() - sLogTick[line_index];
 #ifndef AUTOHOTKEYSC
 			// If the this line and the previous line are in different files, display the filename:
 			if (last_file_index != sLog[line_index]->mFileIndex)
@@ -12086,7 +12084,7 @@ LPTSTR Line::LogToText(LPTSTR aBuf, int aBufSize) // aBufSize should be an int t
 
 
 
-LPTSTR Line::ToText(LPTSTR aBuf, int aBufSize, bool aCRLF, DWORD aElapsed, bool aLineWasResumed, bool aLineNumber) // aBufSize should be an int to preserve negatives from caller (caller relies on this).
+LPTSTR Line::ToText(LPTSTR aBuf, int aBufSize, bool aCRLF, s_tick_t aElapsed, bool aLineWasResumed, bool aLineNumber) // aBufSize should be an int to preserve negatives from caller (caller relies on this).
 // aBufSize is an int so that any negative values passed in from caller are not lost.
 // Caller has ensured that aBuf isn't NULL.
 // Translates this line into its text equivalent, putting the result into aBuf and

@@ -42,10 +42,10 @@ BIF_DECL(BIF_FormatTime)
 	// which avoids having to constantly check for buffer overflow while translating aFormat
 	// into format_buf:
 	#define FT_MAX_OUTPUT_CHARS (2*FT_MAX_INPUT_CHARS + 10)
-	TCHAR format_buf[FT_MAX_OUTPUT_CHARS + 1];
+	TCHAR format_buf[FT_MAX_OUTPUT_CHARS + 1]{};
 	TCHAR output_buf[FT_MAX_OUTPUT_CHARS + 1]; // The size of this is somewhat arbitrary, but buffer overflow is checked so it's safe.
 
-	TCHAR yyyymmdd[256]; // Large enough to hold date/time and any options that follow it (note that D and T options can appear multiple times).
+	TCHAR yyyymmdd[256]{}; // Large enough to hold date/time and any options that follow it (note that D and T options can appear multiple times).
 	*yyyymmdd = '\0';
 
 	SYSTEMTIME st;
@@ -1061,8 +1061,9 @@ BIF_DECL(BIF_Sort)
 	size_t i, item_count_minus_1 = item_count - 1;
 	DWORD omit_dupe_count = 0;
 	bool keep_this_item;
-	LPTSTR source, dest;
-	LPTSTR item_prev = NULL;
+	LPCTSTR source;
+	LPTSTR dest;
+	LPCTSTR item_prev = NULL;
 
 	// Copy the sorted result back into output_var.  Do all except the last item, since the last
 	// item gets special treatment depending on the options that were specified.
@@ -1441,7 +1442,7 @@ BIF_DECL(BIF_Format)
 				spec_len = int(cp - cp_spec);
 				// For now, size specifiers (h | l | ll | w | I | I32 | I64) are not supported.
 				
-				if (spec_len + 4 >= _countof(spec)) // Format specifier too long (probably invalid).
+				if (static_cast<size_t>(spec_len) + 4 >= _countof(spec)) // Format specifier too long (probably invalid).
 					continue;
 				// Copy options, if any (+1 to leave the leading %).
 				tmemcpy(spec + 1, cp_spec, spec_len);

@@ -80,7 +80,7 @@ bif_impl FResult ProcessGetPath(optl<StrArg> aProcess, StrRet &aRetVal)
 
 
 
-void MsgSleepWithListLines(int aSleepDuration, Line *waiting_line, DWORD start_time);
+void MsgSleepWithListLines(int aSleepDuration, Line *waiting_line, s_tick_t start_time);
 
 static FResult ProcessWait(StrArg aProcess, optl<double> aTimeout, UINT &aRetVal, bool aWaitClose)
 {
@@ -88,8 +88,8 @@ static FResult ProcessWait(StrArg aProcess, optl<double> aTimeout, UINT &aRetVal
 	HANDLE proc = NULL;
 	// This section is similar to that used for WINWAIT and RUNWAIT:
 	bool wait_indefinitely;
-	int sleep_duration, remainder;
-	DWORD start_time = GetTickCount();
+	s_tick_t sleep_duration, remainder;
+	s_tick_t start_time = GetLocalTickCount();
 	Line *waiting_line = g_script.mCurrLine;
 	if (aTimeout.has_value()) // The param containing the timeout value was specified.
 	{
@@ -120,11 +120,11 @@ static FResult ProcessWait(StrArg aProcess, optl<double> aTimeout, UINT &aRetVal
 			return OK;
 		}
 		// Must use int or any negative result (due to exceeding sleep_duration) will be lost due to DWORD type:
-		if (wait_indefinitely || (remainder = sleep_duration - (GetTickCount() - start_time)) > SLEEP_INTERVAL_HALF)
+		if (wait_indefinitely || (remainder = sleep_duration - (GetLocalTickCount() - start_time)) > SLEEP_INTERVAL_HALF)
 		{
 			if (aWaitClose && (proc || (proc = OpenProcess(SYNCHRONIZE, FALSE, pid))))
 			{
-				switch (MsgWaitForMultipleObjects(1, &proc, FALSE, wait_indefinitely ? INFINITE : remainder, QS_ALLINPUT))
+				switch (MsgWaitForMultipleObjects(1, &proc, FALSE, wait_indefinitely ? INFINITE : static_cast<DWORD>(remainder), QS_ALLINPUT))
 				{
 				case WAIT_OBJECT_0:
 					CloseHandle(proc);
