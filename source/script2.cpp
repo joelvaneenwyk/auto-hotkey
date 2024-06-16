@@ -148,7 +148,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPar
 		return msg_reply; // MsgMonitor has returned "true", indicating that this message should be omitted from further processing.
 
 	TRANSLATE_AHK_MSG(iMsg, wParam)
-	
+
 	switch (iMsg)
 	{
 	case WM_COMMAND:
@@ -422,7 +422,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPar
 			return 0; // The correct return value for this msg.
 		}
 		break; // Let DWP handle it.
-		
+
 	case WM_SETFOCUS:
 		if (hWnd == g_hWnd)
 		{
@@ -532,7 +532,7 @@ LRESULT CALLBACK MainWindowProc(HWND hWnd, UINT iMsg, WPARAM wParam, LPARAM lPar
 			g_script.UpdateTrayIcon(true);
 			// And now pass this iMsg on to DefWindowProc() in case it does anything with it.
 		}
-		
+
 #ifdef CONFIG_DEBUGGER
 		static UINT sAttachDebuggerMessage = RegisterWindowMessage(_T("AHK_ATTACH_DEBUGGER"));
 		if (iMsg == sAttachDebuggerMessage && !g_Debugger.IsConnected())
@@ -700,7 +700,7 @@ bool HandleMenuItem(HWND aHwnd, WORD aMenuItemID, HWND aGuiHwnd)
 		// at this moment in time, and whether that uninterruptibility should be overridden here:
 		// 1) YES: g_MenuIsVisible is true (which in turn means that the script is marked
 		//    uninterruptible to prevent timed subroutines from running and possibly
-		//    interfering with menu navigation): Seems impossible because apparently 
+		//    interfering with menu navigation): Seems impossible because apparently
 		//    the WM_RBUTTONDOWN must first be returned from before we're called directly
 		//    with the WM_COMMAND message corresponding to the menu item chosen by the user.
 		//    In other words, g_MenuIsVisible will be false and the script thus will
@@ -935,7 +935,7 @@ DWORD GetAHKInstallDir(LPTSTR aBuf)
 
 
 
-LPTSTR Script::DefaultDialogTitle()
+LPTSTR Script::DefaultDialogTitle() const
 {
 	// If the script has set A_ScriptName, use that:
 	if (mScriptName)
@@ -1142,9 +1142,9 @@ bif_impl FResult ToolTip(optl<StrArg> aText, optl<int> aX, optl<int> aY, optl<in
 		aRetVal = 0;
 		return OK;
 	}
-	
+
 	bool one_or_both_coords_unspecified = !aX.has_value() || !aY.has_value();
-		 
+
 	POINT pt, pt_cursor;
 	if (one_or_both_coords_unspecified)
 	{
@@ -1537,7 +1537,7 @@ bif_impl FResult FileSelect(optl<StrArg> aOptions, optl<StrArg> aWorkingDir, opt
 		// Have a maximum to help prevent runaway hotkeys due to key-repeat feature, etc.
 		return FError(_T("The maximum number of File Dialogs has been reached."));
 	}
-	
+
 	LPCTSTR default_file_name = _T("");
 	LPCTSTR initial_dir = nullptr;
 	if (aWorkingDir.has_nonempty_value())
@@ -1756,7 +1756,7 @@ bif_impl FResult FileSelect(optl<StrArg> aOptions, optl<StrArg> aWorkingDir, opt
 		aResultToken.Return(files);
 		return OK;
 	}
-	
+
 	aResultToken.SetValue(_T(""), 0); // Set default.
 	IShellItem *psi;
 	if (SUCCEEDED(result) && SUCCEEDED(pfd->GetResult(&psi)))
@@ -1805,7 +1805,7 @@ FResult SetToggleState(vk_type aVK, ToggleValueType &ForceLock, optl<StrArg> aTo
 		break;
 	case NEUTRAL:
 		// Note: No attempt is made to detect whether the keybd hook should be deinstalled
-		// because it's no longer needed due to this change.  That would require some 
+		// because it's no longer needed due to this change.  That would require some
 		// careful thought about the impact on the status variables in the Hotkey class, etc.,
 		// so it can be left for a future enhancement:
 		ForceLock = NEUTRAL;
@@ -2452,7 +2452,7 @@ bif_impl FResult BIF_Hotkey(StrArg aName, ExprTokenType *aAction, optl<StrArg> a
 			{
 				if (_tcscmp(Hotkey::shk[i]->mName, action_string))
 					continue;
-				
+
 				for (HotkeyVariant* v = Hotkey::shk[i]->mFirstVariant; v; v = v->mNextVariant)
 					if (v->mHotCriterion == g->HotCriterion)
 					{
@@ -2819,19 +2819,19 @@ void MsgMonitorList::Delete(MsgMonitorStruct *aMonitor)
 {
 	ASSERT(aMonitor >= mMonitor && aMonitor < mMonitor + mCount);
 
-	int mon_index = int(aMonitor - mMonitor);
+	size_t mon_index = aMonitor - mMonitor;
 	// Adjust the index of any active message monitors affected by this deletion.  This allows a
 	// message monitor to delete older message monitors while still allowing any remaining monitors
 	// of that message to be called (when there are multiple).
 	for (MsgMonitorInstance *inst = mTop; inst; inst = inst->previous)
 	{
-		inst->Delete(mon_index);
+		inst->Delete(static_cast<int>(mon_index));
 	}
 	// Remove the item from the array.
 	--mCount;  // Must be done prior to the below.
 	LPVOID release_me = aMonitor->union_value;
 	bool is_method = aMonitor->is_method;
-	if (mon_index < mCount) // An element other than the last is being removed. Shift the array to cover/delete it.
+	if (mon_index < (size_t)mCount) // An element other than the last is being removed. Shift the array to cover/delete it.
 		memmove(aMonitor, aMonitor + 1, (mCount - mon_index) * sizeof(MsgMonitorStruct));
 	if (is_method)
 		free(release_me);
@@ -2901,7 +2901,7 @@ static FResult OnScriptEvent(IObject *aFunction, optl<int> aAddRemove, MsgMonito
 	auto fr = ValidateFunctor(aFunction, aParamCount);
 	if (fr != OK)
 		return fr;
-	
+
 	int mode = aAddRemove.value_or(1);
 
 	MsgMonitorStruct *existing = handlers.Find(0, aFunction);
@@ -3137,7 +3137,7 @@ void Object::Error__New(ResultToken &aResultToken, int aID, int aFlags, ExprToke
 	{
 		DWORD error = ParamIndexIsOmitted(0) ? g->LastError : (DWORD)ParamIndexToInt64(0);
 		SetOwnProp(_T("Number"), error);
-		
+
 		// Determine message based on error number.
 		DWORD message_buf_size = _f_retval_buf_size;
 		message = _f_retval_buf;
@@ -3320,7 +3320,7 @@ SymbolType TokenIsNumeric(ExprTokenType &aToken)
 	case SYM_INTEGER:
 	case SYM_FLOAT:
 		return aToken.symbol;
-	case SYM_VAR: 
+	case SYM_VAR:
 		return aToken.var->IsNumeric();
 	case SYM_STRING: // Callers of this function expect a "numeric" result for numeric strings.
 		return IsNumeric(aToken.marker, true, false, true);
@@ -3623,7 +3623,7 @@ IObject *TokenToObject(ExprTokenType &aToken)
 {
 	if (aToken.symbol == SYM_OBJECT)
 		return aToken.object;
-	
+
 	if (aToken.symbol == SYM_VAR)
 		return aToken.var->ToObject();
 

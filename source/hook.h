@@ -202,8 +202,8 @@ struct input_type
 	#define INPUT_ARRAY_BLOCK_SIZE 1024  // The increment by which the above array expands.
 	LPTSTR MatchBuf; // The is the buffer whose contents are pointed to by the match array.
 	UINT MatchBufSize; // The capacity of the above buffer.
-	int Timeout;
-	DWORD TimeoutAt;
+	s_tick_t Timeout;
+	s_tick_t TimeoutAt;
 	SendLevelType MinSendLevel; // The minimum SendLevel that can be captured by this input (0 allows all).
 	bool BackspaceIsUndo;
 	bool CaseSensitive;

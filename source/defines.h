@@ -370,6 +370,7 @@ struct ExprTokenType  // Something in the compiler hates the name TokenType, so 
 
 
 	ExprTokenType() {}
+	ExprTokenType(const ExprTokenType& aValue) { CopyValueFrom(aValue); }
 	ExprTokenType(int aValue) { SetValue(aValue); }
 	ExprTokenType(__int64 aValue) { SetValue(aValue); }
 	ExprTokenType(double aValue) { SetValue(aValue); }
@@ -404,7 +405,7 @@ struct ExprTokenType  // Something in the compiler hates the name TokenType, so 
 		object = aValue;
 	}
 
-	inline void CopyValueFrom(ExprTokenType &other)
+	inline void CopyValueFrom(const ExprTokenType &other)
 	// Copies the value of a token (by reference where applicable).  Does not object->AddRef().
 	{
 		value_int64 = other.value_int64; // Union copy.
@@ -548,12 +549,12 @@ struct ResultToken : public ExprTokenType
 		return result = aResult;
 	}
 
-	bool Exited()
+	bool Exited() const
 	{
 		return result == FAIL || result == EARLY_EXIT;
 	}
 
-	ResultType Result()
+	ResultType Result() const
 	{
 		return result;
 	}
@@ -717,6 +718,15 @@ typedef UCHAR HookType;
 #define EXTERN_SCRIPT extern Script g_script
 #define CLIPBOARD_CONTAINS_ONLY_FILES (!IsClipboardFormatAvailable(CF_NATIVETEXT) && IsClipboardFormatAvailable(CF_HDROP))
 
+#ifdef _WIN64
+#define GetLocalTickCount() (GetTickCount64())
+typedef ULONGLONG s_tick_t;
+typedef LONGLONG s_duration_t;
+#else
+#define GetLocalTickCount() (GetTickCount())
+typedef DWORD s_tick_t;
+typedef LONG s_duration_t;
+#endif
 
 // These macros used to keep app responsive during a long operation.  In v1.0.39, the
 // hooks have a dedicated thread.  However, mLastPeekTime is still compared to 5 rather
@@ -739,7 +749,7 @@ typedef UCHAR HookType;
 // Older comment that applies if there is ever again no dedicated thread for the hooks:
 // These macros were greatly simplified when it was discovered that PeekMessage(), when called
 // directly as below, is enough to prevent keyboard and mouse lag when the hooks are installed
-#define LONG_OPERATION_INIT MSG msg; DWORD tick_now;
+#define LONG_OPERATION_INIT MSG msg; s_tick_t tick_now;
 
 // MsgSleep() is used rather than SLEEP_WITHOUT_INTERRUPTION to allow other hotkeys to
 // launch and interrupt (suspend) the operation.  It seems best to allow that, since
@@ -759,12 +769,12 @@ typedef UCHAR HookType;
 // than combined in a chained assignment statement.
 #define LONG_OPERATION_UPDATE \
 {\
-	tick_now = GetTickCount();\
+	tick_now = GetLocalTickCount();\
 	if (tick_now - g_script.mLastPeekTime > ::g->PeekFrequency)\
 	{\
 		if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))\
 			MsgSleep(-1);\
-		tick_now = GetTickCount();\
+		tick_now = GetLocalTickCount();\
 		g_script.mLastPeekTime = tick_now;\
 	}\
 }
@@ -772,12 +782,12 @@ typedef UCHAR HookType;
 // Same as the above except for SendKeys() and related functions (uses SLEEP_WITHOUT_INTERRUPTION vs. MsgSleep).
 #define LONG_OPERATION_UPDATE_FOR_SENDKEYS \
 {\
-	tick_now = GetTickCount();\
+	tick_now = GetLocalTickCount();\
 	if (tick_now - g_script.mLastPeekTime > ::g->PeekFrequency)\
 	{\
 		if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))\
 			SLEEP_WITHOUT_INTERRUPTION(-1) \
-		tick_now = GetTickCount();\
+		tick_now = GetLocalTickCount();\
 		g_script.mLastPeekTime = tick_now;\
 	}\
 }
@@ -909,7 +919,7 @@ struct ScriptThreadState
 	int Priority;  // This thread's priority relative to others.
 	int UninterruptedLineCount; // Stored as a g-struct attribute in case OnExit func interrupts it while uninterruptible.
 	int UninterruptibleDuration; // Must be int to preserve negative values found in g_script.mUninterruptibleTime.
-	DWORD ThreadStartTime;
+	s_tick_t ThreadStartTime;
 
 	bool IsPaused;
 	bool MsgBoxTimedOut; // Meaningful only while a MsgBox call is in progress.

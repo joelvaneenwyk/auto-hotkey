@@ -1651,7 +1651,7 @@ for (;;)
     case OP_CALLOUT:
     code += code[1] + PRIV(OP_lengths)[*code]; /* AutoHotkey */
     break;
-    
+
     case OP_CREF:
     case OP_NCREF:
     case OP_RREF:
