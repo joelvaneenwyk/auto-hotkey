@@ -677,7 +677,7 @@ public:
 	STDMETHODIMP get_Vars(IDispatch **ppVars)
 	{
 #ifdef CONFIG_DLL
-		return VarCollection::Create(&g_script.mVars, ppVars);
+		return VarCollection::Create(g_script.GlobalVars(), ppVars);
 #else
 		return S_FALSE;
 #endif

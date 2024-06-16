@@ -14,8 +14,8 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 */
 
-#ifndef script_h
-#define script_h
+#ifndef _SCRIPT_H_
+#define _SCRIPT_H_
 
 #include "stdafx.h" // pre-compiled headers
 #include "defines.h"
@@ -2754,5 +2754,4 @@ bool LibNotifyProblem(ExprTokenType &aProblem);
 bool LibNotifyProblem(LPCTSTR aMessage, LPCTSTR aExtra, Line *aLine, bool aWarn = false);
 #endif
 
-#endif
-
+#endif // _SCRIPT_H_

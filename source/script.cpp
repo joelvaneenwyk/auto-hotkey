@@ -6602,8 +6602,6 @@ Object *Script::FindClass(LPCTSTR aClassName, size_t aClassNameLength)
 	return base_object;
 }
 
-
-
 #ifndef AUTOHOTKEYSC
 
 #define FUNC_LIB_EXT EXT_AUTOHOTKEY
@@ -6650,8 +6648,8 @@ void Script::InitFuncLibrary(FuncLibrary &aLib, LPTSTR aPathBase, LPTSTR aPathSu
 	aLib.length = length;
 }
 
-LPTSTR Script::FindLibraryFile(LPTSTR aFuncName, size_t aFuncNameLength, bool aIsModule)
-// If aFuncNameLength is 0, the entire length of aFuncName is used.
+LPTSTR Script::FindLibraryFile(LPTSTR aName, size_t aNameLength, bool aIsModule)
+// If aNameLength is 0, the entire length of aName is used.
 // Returns the path; valid only until the next call to this function.
 {
 	int i;
@@ -6663,14 +6661,14 @@ LPTSTR Script::FindLibraryFile(LPTSTR aFuncName, size_t aFuncNameLength, bool aI
 		InitFuncLibraries(sLib);
 	// Above must ensure that all sLib[].path elements are non-NULL (but they can be "" to indicate "no library").
 
-	if (!aFuncNameLength) // Caller didn't specify, so use the entire string.
-		aFuncNameLength = _tcslen(aFuncName);
-	if (aFuncNameLength > MAX_VAR_NAME_LENGTH) // Too long to fit in the allowed space, and also too long to be a valid function name.
+	if (!aNameLength) // Caller didn't specify, so use the entire string.
+		aNameLength = _tcslen(aName);
+	if (aNameLength > MAX_VAR_NAME_LENGTH) // Too long to fit in the allowed space, and also too long to be a valid function name.
 		return nullptr;
 
 	TCHAR *dest;
-	LPTSTR naked_filename = aFuncName;               // Set up for the first iteration.
-	size_t naked_filename_length = aFuncNameLength; //
+	LPTSTR naked_filename = aName;               // Set up for the first iteration.
+	size_t naked_filename_length = aNameLength; //
 
 		for (i = 0; i < FUNC_LIB_COUNT; ++i)
 		{
@@ -6694,8 +6692,8 @@ LPTSTR Script::FindLibraryFile(LPTSTR aFuncName, size_t aFuncNameLength, bool aI
 	// The legacy behaviour for #Include <A_B> is that all Libs are searched for A_B.ahk before
 	// searching for A.ahk, which means that A_B.ahk takes precedence over A.ahk even if A.ahk
 	// is defined in the local Lib and A_B.ahk is not.
-	if (auto first_underscore = _tcschr(aFuncName, '_'))
-		return FindLibraryFile(aFuncName, first_underscore - aFuncName);
+	if (auto first_underscore = _tcschr(aName, '_'))
+		return FindLibraryFile(aName, first_underscore - aName);
 	return nullptr;
 }
 
