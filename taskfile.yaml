@@ -1,0 +1,24 @@
+# https://taskfile.dev
+
+version: '3'
+
+tasks:
+  default:
+    cmds:
+      - task: build
+
+  build:
+    cmds:
+      - cmd: cmake --preset "x64-windows"
+      - cmd: cmake --build --preset "x64-windows"
+      - cmd: cmake --build --preset "x64-windows" --target install
+
+  pre-commit:
+    cmds:
+      - git add --renormalize .
+      - git reset --mixed
+      - task revert-whitespace
+
+  revert-whitespace:
+    cmds:
+      - cmd: git diff -U0 -w --no-color | git apply --cached --ignore-whitespace --unidiff-zero -
