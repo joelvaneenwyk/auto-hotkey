@@ -294,6 +294,7 @@ COMDLG
 commmands
 COMMNOTIFY
 commoning
+COMNTOOLS
 compilant
 COMPUTERNAME
 CONDASSERT
@@ -328,6 +329,7 @@ CPINFO
 cplit
 CPOOL
 CPPFLAGS
+cppm
 CPUID
 CRCRLF
 CREATEDIBSECTION
@@ -412,6 +414,7 @@ DELETEITEM
 DELETEITEMA
 DELETEITEMW
 DELETESTRING
+delims
 DELTAPOS
 depcomp
 DEPRIVATIZE
@@ -423,6 +426,8 @@ DESTDIR
 destext
 destfile
 Detrail
+devel
+devenv
 dftables
 DHAVE
 diagnosic
@@ -500,6 +505,7 @@ endchar
 ENDKEY
 ENDLABELEDITA
 ENDLABELEDITW
+endlocal
 ENDLOOP
 ENDONLY
 endpattern
@@ -522,6 +528,7 @@ eptrblock
 eptrblocks
 eptrchain
 eptrn
+eqnull
 EQUALCASE
 ERASEBKGND
 ERCP
@@ -533,6 +540,7 @@ errorlevel
 erroroffset
 errorptr
 esize
+esversion
 ETCHEDFRAME
 ETCHEDHORZ
 ETCHEDVERT
@@ -644,6 +652,7 @@ freevars
 freg
 fresult
 Friedl's
+FSHARPINSTALLDIR
 fsin
 FSOURCE
 fstp
@@ -660,6 +669,7 @@ funcaddrptr
 FUNCDECL
 FUNCPARAM
 FUNCREF
+funcscope
 funtions
 FVIRTKEY
 fxch
@@ -889,6 +899,7 @@ initialiser
 INITMENUPOPUP
 initval
 Inkscape
+Inlcude
 INPROC
 inputbox
 INPUTEDIT
@@ -1012,7 +1023,11 @@ Landheer
 LASTINPUTINFO
 LASTLITERAL
 lastptr
+lastsemic
 Laszlo's
+latedef
+laxbreak
+laxcomma
 LBUTTON
 LBUTTONDBLCLK
 LBUTTONDOWN
@@ -1083,6 +1098,7 @@ LONGDATE
 LONGDATEFORMAT
 lookaheads
 lookbehinds
+loopfunc
 LOOPREPEAT
 LOOPXXX
 loreg
@@ -1191,13 +1207,17 @@ Masm
 MATCHLIMIT
 MATCHMODE
 matchobj
+maxcomplexity
 MAXDWORD
+maxerr
 MAXHIDE
 Maxia's
 MAXIMIZEBOX
 maxoffsetcount
 maxp
+maxparams
 MAXSHOW
+maxstatements
 MAXVAL
 maxversiontested
 Mayek
@@ -1305,6 +1325,7 @@ Mulders
 MULTIDESTFILES
 multimonitor
 MULTIPLESEL
+multistr
 Mwuahaha
 MYDLG
 MYDOCUMENTS
@@ -1342,7 +1363,9 @@ needstype
 negptr
 nestptr
 NESW
+NETFXSDK
 newbsr
+newcap
 NEWDIALOGSTYLE
 NEWENUM
 newframe
@@ -1372,6 +1395,7 @@ nmod
 NMSELCHANGE
 NMTVITEMCHANGE
 NOACTIVATE
+noarg
 NOCHANGEDIR
 NOCLOSEPROCESS
 NOCOLUMNHEADER
@@ -1388,7 +1412,9 @@ NOINVERT
 nolabels
 NOMEMBER
 NOMOVE
+nonbsp
 nonclient
+nonew
 NONEWDIALOG
 NONEWFOLDERBUTTON
 nonqueued
@@ -1447,7 +1473,9 @@ NOTSTARI
 nottype
 NOTUPTO
 NOTUPTOI
+notypeof
 Novak
+noyield
 NOZORDER
 nrec
 nref
@@ -1511,6 +1539,7 @@ OPAREN
 OPARENs
 openbrace
 OPENFILENAMEW
+OPENSLL
 OPENVOS
 opional
 optimisations
@@ -1647,6 +1676,7 @@ precendence
 PRECOMPOSED
 PRECONFIG
 prefered
+PREINIT
 Preparse
 preparser
 preparsing
@@ -1668,6 +1698,7 @@ propertyname
 PROPERTYPUT
 PROPERTYPUTREF
 PROPVARIANT
+prototypejs
 psapi
 PSEND
 PSSTART
@@ -1692,6 +1723,7 @@ QSTRING
 QUERYENDSESSION
 QUERYI
 QUICKMATH
+quotmark
 qword
 QWORDs
 RADIOCHECK
@@ -1718,6 +1750,8 @@ RECURSELOOP
 RECURSIONLIMIT
 recursivefunc
 recursivehotpath
+Redist
+REDIST
 refactorings
 REFGUID
 REFI
@@ -1836,7 +1870,9 @@ SCOND
 Scoopex
 SCPBRPOS
 Scriptable
+Scriptaculous
 scriptreg
+scripturl
 scrollbars
 SCROLLCARET
 Scrolllock
@@ -1862,6 +1898,7 @@ SENDANDMOUSE
 sendasc
 sendinput's
 SENDKEYS
+SESSIONNAME
 SETACTIVEWINDOW
 SETBARCOLOR
 SETBKCOLOR
@@ -2050,6 +2087,7 @@ substracts
 succesfully
 suckt
 superglobals
+supernew
 supress
 supressed
 SWAPBUTTON
@@ -2077,6 +2115,7 @@ Tagbanwa
 talloca
 targv
 TASKBARCREATED
+TASKFILE
 Tassilo
 TBTS
 TBYTE
@@ -2216,6 +2255,7 @@ typerange
 typereg
 TYPESTAR
 TYPEUPTO
+UATDATA
 uchardata
 ucharptr
 UCHARS
@@ -2223,6 +2263,7 @@ UCOND
 ucpinternal
 ucpname
 ucptable
+UCRT
 UDFS
 Ufloat
 uility
@@ -2246,6 +2287,7 @@ unfound
 unhide
 Unices
 UNICODETEXT
+unidiff
 unincremented
 Uninitialize
 UNINITMENUPOPUP
@@ -2299,12 +2341,18 @@ uxtheme
 valgrind
 VALIDATEFAILED
 VALIDATENAME
+validthis
 varbkp
 VARDECL
 VARIANTARG
 VARREF
+varstmt
 varyopt
+VCIDE
+VCINSTALLDIR
+VCPKG
 vcproj
+VCVARS
 verbcount
 verbitem
 verbnames
@@ -2320,10 +2368,15 @@ VPCOMPAT
 VPOS
 VREDRAW
 vsbuild
+VSCMD
 VSCROLL
+vsdev
 vsdevcmd
+VSINSTALLDIR
 vsntprintf
 vsnwprintf
+VSSDK
+VSSDKINSTALL
 vswhere
 vval
 WANTNUKEWARNING
