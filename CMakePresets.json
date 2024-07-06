@@ -3,24 +3,50 @@
   "configurePresets": [
     {
       "name": "x64-windows",
-      "displayName": "VS2022 - amd64",
+      "displayName": "VS2022 x64",
       "description": "Using compilers for Visual Studio 17 2022 (x64 architecture)",
       "generator": "Visual Studio 17 2022",
-      "toolset": "host=x64",
+      "toolset": "v143",
       "architecture": "x64",
-      "binaryDir": "${sourceDir}/out/build/${presetName}",
+      "binaryDir": "${sourceDir}/.build/config/${presetName}",
+      "installDir": "${sourceDir}/.build/install/${presetName}",
       "cacheVariables": {
-        "CMAKE_INSTALL_PREFIX": "${sourceDir}/out/install/${presetName}",
         "CMAKE_C_COMPILER": "cl.exe",
         "CMAKE_CXX_COMPILER": "cl.exe"
+      }
+    },
+    {
+      "name": "x64-msvc-clang",
+      "displayName": "VS2022 Clang x64",
+      "description": "Using compilers: C = C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\Llvm\\x64\\bin\\clang-cl.exe, CXX = C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\Llvm\\x64\\bin\\clang-cl.exe",
+      "generator": "Visual Studio 17 2022",
+      "toolset": "ClangCL,host=x64",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/.build/config/${presetName}",
+      "installDir": "${sourceDir}/.build/install/${presetName}",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/x64/bin/clang-cl.exe",
+        "CMAKE_CXX_COMPILER": "C:/Program Files/Microsoft Visual Studio/2022/Community/VC/Tools/Llvm/x64/bin/clang-cl.exe"
       }
     }
   ],
   "buildPresets": [
     {
-      "name": "x64-windows-debug",
-      "displayName": "VS2022 - amd64 - Debug",
+      "name": "x64-windows",
+      "displayName": "VS2022 x64 // Release",
       "configurePreset": "x64-windows",
+      "configuration": "RelWithDebInfo"
+    },
+    {
+      "name": "x64-windows-debug",
+      "displayName": "VS2022 x64 // Debug",
+      "configurePreset": "x64-windows",
+      "configuration": "Debug"
+    },
+    {
+      "name": "x64-msvc-clang-debug",
+      "displayName": "Clang 17.0.3 (MSVC CLI) for MSVC 17.10.34928.147 (Visual Studio Community 2022 Release - amd64) - Debug",
+      "configurePreset": "x64-msvc-clang",
       "configuration": "Debug"
     }
   ]
