@@ -1,9 +1,11 @@
 {
   "files.associations": {
+    "*.vcxproj.user": "xml",
+    "*.wsf": "javascript",
     ".clang-format": "yaml",
     ".clang-tidy": "yaml",
-    "*.wsf": "javascript",
     "ChangeLog": "plaintext",
+    "cpp.hint": "cpp",
     "HACKING": "plaintext",
     "INSTALL": "plaintext",
     "NEWS": "plaintext",
