@@ -5,7 +5,13 @@ version: '3'
 tasks:
   default:
     cmds:
-      - task: build
+      - task: cmake-build
+        vars: { CMAKE_PRESET: 'x64-windows' }
+
+  clang:
+    cmds:
+      - task: cmake-build
+        vars: { CMAKE_PRESET: 'x64-windows-clang' }
 
   msbuild:
     vars:
@@ -29,10 +35,12 @@ tasks:
         vars: { CONFIG: '{{ .ITEM }}' }
 
   cmake-build:
+    vars:
+      CM_BUILD_CMAKE_PRESET: '{{ .CMAKE_PRESET | default "x64-windows" }}'
     cmds:
-      - cmd: cmake --preset "x64-windows"
-      - cmd: cmake --build --preset "x64-windows"
-      - cmd: cmake --build --preset "x64-windows" --target install
+      - cmd: cmake --preset "{{ .CM_BUILD_CMAKE_PRESET }}"
+      - cmd: cmake --build --preset "{{ .CM_BUILD_CMAKE_PRESET }}"
+      - cmd: cmake --build --preset "{{ .CM_BUILD_CMAKE_PRESET }}" --target install
 
   pre-commit:
     cmds:

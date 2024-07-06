@@ -43,10 +43,7 @@
         "/consoleloggerparameters:NoSummary",
         "${workspaceFolder}/AutoHotkeyx.sln"
       ],
-      "group": {
-        "kind": "build",
-        "isDefault": true
-      },
+      "group": "build",
       "problemMatcher": []
     },
     {
@@ -71,7 +68,10 @@
         "ALL_BUILD"
       ],
       "preset": "${command:cmake.activeBuildPresetName}",
-      "group": "build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "problemMatcher": [],
       "detail": "CMake template build task"
     }
