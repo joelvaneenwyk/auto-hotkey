@@ -1222,6 +1222,7 @@ maxstatements
 MAXVAL
 maxversiontested
 Mayek
+mbcs
 MBTWC
 MBUTTON
 MBUTTONDBLCLK
