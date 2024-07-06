@@ -7,7 +7,28 @@ tasks:
     cmds:
       - task: build
 
+  msbuild:
+    vars:
+      MSBUILD: '{{ joinPath "C:/Program Files/Microsoft Visual Studio/2022/Preview" "MSBuild" "Current" "Bin" "MSBuild.exe" }}'
+      MSBUILD_CONFIG: '{{ .CONFIG | default "Debug" }}'
+      MSBUILD_SOLUTION: '{{ joinPath .TASKFILE_DIR (.SOLUTION | default "AutoHotkeyx.sln") }}'
+      MSBUILD_PLATFORM: '{{ .PLATFORM | default "x64" }}'
+    cmds:
+      - cmd: >-
+          "{{ .MSBUILD }}"
+          /m 
+          /t:Rebuild 
+          /p:Configuration="{{.MSBUILD_CONFIG}}" 
+          /p:Platform="{{.MSBUILD_PLATFORM}}" 
+          "{{.MSBUILD_SOLUTION}}"
+  
   build:
+    cmds:
+      - for: ['Debug', 'Release']
+        task: msbuild
+        vars: { CONFIG: '{{ .ITEM }}' }
+
+  cmake-build:
     cmds:
       - cmd: cmake --preset "x64-windows"
       - cmd: cmake --build --preset "x64-windows"
