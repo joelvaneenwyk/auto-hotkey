@@ -1,17 +1,36 @@
-# https://taskfile.dev
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+# cspell:ignore taskfile,vcpkg,msbuild,makefiles,deinit
 
 version: '3'
+
+vars:
+  PLATFORMS: [Win32, x64]
+  ARCHITECTURES: [x86, x64]
+  CONFIGURATIONS:
+    - Debug
+    - Debug.dll
+    - Release
+    - Release.dll
+    - Self-contained
+    - Self-contained(debug)
 
 tasks:
   default:
     cmds:
-      - task: cmake-build
-        vars: { CMAKE_PRESET: 'x64-windows' }
+      - task: check-msbuild
 
-  clang:
+  check-msbuild:
+    silent: true
     cmds:
-      - task: cmake-build
-        vars: { CMAKE_PRESET: 'x64-windows-clang' }
+      - for: { var: CONFIGURATIONS }
+        task: msbuild
+        vars: { CONFIG: '{{ .ITEM }}' }
+
+  build:
+    cmds:
+      - for: ['Debug', 'Release']
+        task: msbuild
+        vars: { CONFIG: '{{ .ITEM }}' }
 
   msbuild:
     vars:
@@ -30,19 +49,24 @@ tasks:
       MSBUILD_SOLUTION: '{{ joinPath .TASKFILE_DIR (.SOLUTION | default "AutoHotkeyx.sln") }}'
       MSBUILD_PLATFORM: '{{ .PLATFORM | default "x64" }}'
     cmds:
+      - cmd: echo "Building '{{ .MSBUILD_SOLUTION }}' with '{{ .MSBUILD_CONFIG }}' configuration."
       - cmd: >-
           "{{ .MSBUILD }}"
           /m 
-          /t:Rebuild 
+          /t:Build 
           /p:Configuration="{{.MSBUILD_CONFIG}}" 
           /p:Platform="{{.MSBUILD_PLATFORM}}" 
           "{{.MSBUILD_SOLUTION}}"
   
-  build:
+  clang:
     cmds:
-      - for: ['Debug', 'Release']
-        task: msbuild
-        vars: { CONFIG: '{{ .ITEM }}' }
+      - task: cmake-build
+        vars: { CMAKE_PRESET: 'x64-windows-clang' }
+
+  cmake-check:
+    cmds:
+      - task: cmake-build
+        vars: { CMAKE_PRESET: 'x64-windows' }
 
   cmake-build:
     vars:
