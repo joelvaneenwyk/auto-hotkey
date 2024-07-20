@@ -1,0 +1,9 @@
+#
+# auto-hotkey | Binary output directory
+#
+
+debug/
+Release*/
+Self-contained/
+Win32/
+x64/
