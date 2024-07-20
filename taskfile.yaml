@@ -15,7 +15,17 @@ tasks:
 
   msbuild:
     vars:
-      MSBUILD: '{{ joinPath "C:/Program Files/Microsoft Visual Studio/2022/Preview" "MSBuild" "Current" "Bin" "MSBuild.exe" }}'
+      MSBUILD:
+        sh: | # shell
+          strings=("Preview" "Enterprise" "Professional" "Community")
+          for str in "${strings[@]}"
+          do
+            result="C:/Program Files/Microsoft Visual Studio/2022/${str}/MSBuild/Current/Bin/amd64/MSBuild.exe"
+            if [ -e "$result" ]; then
+              echo "$result"
+              break
+            fi
+          done
       MSBUILD_CONFIG: '{{ .CONFIG | default "Debug" }}'
       MSBUILD_SOLUTION: '{{ joinPath .TASKFILE_DIR (.SOLUTION | default "AutoHotkeyx.sln") }}'
       MSBUILD_PLATFORM: '{{ .PLATFORM | default "x64" }}'
