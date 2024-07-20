@@ -33,7 +33,7 @@ ResultType input_type::Setup(LPCTSTR aOptions, LPCTSTR aEndKeys, LPCTSTR aMatchL
 		return FAIL;
 	if (!SetMatchList(aMatchList))
 		return FAIL;
-	
+
 	// For maintainability/simplicity/code size, it's allocated even if BufferLengthMax == 0.
 	if (  !(Buffer = tmalloc(BufferLengthMax + 1))  )
 		return MemoryError();
@@ -51,7 +51,7 @@ void InputStart(input_type &input)
 	// The corresponding Release() is done when g_input is reset by InputRelease().
 	if (input.ScriptObject)
 		input.ScriptObject->AddRef();
-	
+
 	// Set or update the timeout timer if needed.  The timer proc takes care to end
 	// only those inputs which are due, and will reset or kill the timer as needed.
 	if (input.Timeout > 0)
@@ -128,7 +128,7 @@ void input_type::ParseOptions(LPCTSTR aOptions)
 void input_type::SetTimeoutTimer()
 {
 	s_tick_t now = GetLocalTickCount();
-	TimeoutAt = now + Timeout;
+	TimeoutAt = (DWORD)(now + Timeout);
 	if (!g_InputTimerExists || Timeout < s_tick_t(g_InputTimeoutAt - now))
 		SET_INPUT_TIMER(Timeout, TimeoutAt)
 }
@@ -144,7 +144,7 @@ ResultType input_type::SetKeyFlags(LPCTSTR aKeys, bool aEndKeyMode, UCHAR aFlags
 	UINT single_char_count = 0;
 	TCHAR single_char_string[2], key_text[32];
 	single_char_string[1] = '\0'; // Init its second character once, since the loop only changes the first char.
-	
+
 	const bool endchar_mode = aEndKeyMode && EndCharMode;
 	UCHAR * const end_vk = KeyVK;
 	UCHAR * const end_sc = KeySC;
