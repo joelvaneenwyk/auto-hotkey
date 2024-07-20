@@ -4,8 +4,10 @@
 version: '3'
 
 vars:
+  DEFAULT_CONFIG: Release
+  DEFAULT_PLATFORM: x64
+  DEFAULT_SOLUTION: AutoHotkeyx.sln
   PLATFORMS: [Win32, x64]
-  ARCHITECTURES: [x86, x64]
   CONFIGURATIONS:
     - Debug
     - Debug.dll
@@ -17,22 +19,39 @@ vars:
 tasks:
   default:
     cmds:
-      - task: check-msbuild
+      - task: build
 
-  check-msbuild:
+  run:
+    deps: [msbuild]
+    vars:
+      TARGET_EXE: '{{ joinPath .TASKFILE_DIR "bin" .DEFAULT_CONFIG "AutoHotkey64.exe" }}'
+    cmds:
+      - cmd: echo "Running the application."
+      - cmd: >-
+          cmd.exe /D /E:ON /C
+          "
+          echo Starting '{{ shellQuote .TARGET_EXE }}' &&
+          "{{ shellQuote .TARGET_EXE }}"
+          "
+
+  build-all-configurations:
+    aliases: [check, lint, ci]
     silent: true
     cmds:
       - for: { var: CONFIGURATIONS }
-        task: msbuild
+        task: build-all-platforms
         vars: { CONFIG: '{{ .ITEM }}' }
 
-  build:
+  build-all-platforms:
+    silent: true
     cmds:
-      - for: ['Debug', 'Release']
+      - for: { var: PLATFORMS }
         task: msbuild
-        vars: { CONFIG: '{{ .ITEM }}' }
+        vars: { PLATFORM: '{{ .ITEM }}', CONFIG: '{{ .CONFIG }}' }
 
   msbuild:
+    aliases: [build, b]
+    silent: true
     vars:
       MSBUILD:
         sh: | # shell
@@ -45,20 +64,21 @@ tasks:
               break
             fi
           done
-      MSBUILD_CONFIG: '{{ .CONFIG | default "Debug" }}'
-      MSBUILD_SOLUTION: '{{ joinPath .TASKFILE_DIR (.SOLUTION | default "AutoHotkeyx.sln") }}'
-      MSBUILD_PLATFORM: '{{ .PLATFORM | default "x64" }}'
+      MSBUILD_CONFIG: '{{ .CONFIG | default .DEFAULT_CONFIG }}'
+      MSBUILD_SOLUTION: '{{ joinPath .TASKFILE_DIR (.SOLUTION | default .DEFAULT_SOLUTION) }}'
+      MSBUILD_PLATFORM: '{{ .PLATFORM | default .DEFAULT_PLATFORM }}'
     cmds:
       - cmd: echo "Building '{{ .MSBUILD_SOLUTION }}' with '{{ .MSBUILD_CONFIG }}' configuration."
       - cmd: >-
-          "{{ .MSBUILD }}"
+          "{{fromSlash .MSBUILD}}"
           /m 
           /t:Build 
           /p:Configuration="{{.MSBUILD_CONFIG}}" 
           /p:Platform="{{.MSBUILD_PLATFORM}}" 
-          "{{.MSBUILD_SOLUTION}}"
+          "{{fromSlash .MSBUILD_SOLUTION}}"
   
-  clang:
+  cmake-clang:
+    aliases: [clang]
     cmds:
       - task: cmake-build
         vars: { CMAKE_PRESET: 'x64-windows-clang' }
@@ -66,21 +86,21 @@ tasks:
   cmake-check:
     cmds:
       - task: cmake-build
-        vars: { CMAKE_PRESET: 'x64-windows' }
-
-  cmake-build:
-    vars:
-      CM_BUILD_CMAKE_PRESET: '{{ .CMAKE_PRESET | default "x64-windows" }}'
-    cmds:
-      - cmd: cmake --preset "{{ .CM_BUILD_CMAKE_PRESET }}"
-      - cmd: cmake --build --preset "{{ .CM_BUILD_CMAKE_PRESET }}"
-      - cmd: cmake --build --preset "{{ .CM_BUILD_CMAKE_PRESET }}" --target install
 
   pre-commit:
     cmds:
       - git add --renormalize .
       - git reset --mixed
       - task revert-whitespace
+
+  cmake-build:
+    internal: true
+    vars:
+      CM_BUILD_CMAKE_PRESET: '{{ .CMAKE_PRESET | default "x64-windows" }}'
+    cmds:
+      - cmd: cmake --preset "{{ .CM_BUILD_CMAKE_PRESET }}"
+      - cmd: cmake --build --preset "{{ .CM_BUILD_CMAKE_PRESET }}"
+      - cmd: cmake --build --preset "{{ .CM_BUILD_CMAKE_PRESET }}" --target install
 
   revert-whitespace:
     cmds:
