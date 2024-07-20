@@ -1412,6 +1412,7 @@ NOINTEGRALHEIGHT
 NOINTERFACE
 NOINVERT
 nolabels
+Nologo
 NOMEMBER
 NOMOVE
 nonbsp
@@ -1873,6 +1874,7 @@ Scoopex
 SCPBRPOS
 Scriptable
 Scriptaculous
+scriptname
 scriptreg
 scripturl
 scrollbars
@@ -2067,6 +2069,7 @@ stringcount
 stringname
 stringptr
 strlicmp
+STRNE
 STRREPLACE
 strret
 STRT
