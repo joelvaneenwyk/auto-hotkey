@@ -129,7 +129,7 @@ void input_type::SetTimeoutTimer()
 {
 	s_tick_t now = GetLocalTickCount();
 	TimeoutAt = (DWORD)(now + Timeout);
-	if (!g_InputTimerExists || Timeout < s_tick_t(g_InputTimeoutAt - now))
+	if (!g_InputTimerExists || (s_tick_t)Timeout < (s_tick_t)(g_InputTimeoutAt - now))
 		SET_INPUT_TIMER(Timeout, TimeoutAt)
 }
 
