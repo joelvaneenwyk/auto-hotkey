@@ -1,5 +1,10 @@
 {
+  "files.exclude": {
+    "*.vcxproj.user": true
+  },
   "files.associations": {
+    "*.dict": "hunspell.dic",
+    "*.natvis": "xml",
     "*.vcxproj.user": "xml",
     "*.wsf": "javascript",
     ".clang-format": "yaml",

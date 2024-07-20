@@ -11,7 +11,7 @@ language: en
 caseSensitive: false
 dictionaryDefinitions:
   - name: 'auto-hotkey'
-    path: ./config/auto-hotkey-dictionary.txt
+    path: ./config/auto-hotkey.dict
     addWords: true
 dictionaries:
   - 'en_US'
