@@ -345,13 +345,13 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Include="source\libx64call\x64call.asm">
+    <CustomBuild Condition="'$(Platform)'!='x64'" Include="source\libx64call\x64call.asm">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
     </CustomBuild>
-    <CustomBuild Include="source\libx64call\x64stub.asm">
+    <CustomBuild Condition="'$(Platform)'!='x64'" Include="source\libx64call\x64stub.asm">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
     </CustomBuild>
-    <CustomBuild Include="source\x86call.asm">
+    <CustomBuild Condition="'$(Platform)'=='x64'" Include="source\x86call.asm">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </CustomBuild>
   </ItemGroup>
@@ -360,19 +360,19 @@
       <!--
        Usage: CScript scriptname.extension [option...] [arguments...]
        Options:
-        //B         Batch mode: Suppresses script errors and prompts from displaying
-        //D         Enable Active Debugging
-        //E:engine  Use engine for executing script
-        //H:CScript Changes the default script host to CScript.exe
-        //H:WScript Changes the default script host to WScript.exe (default)
-        //I         Interactive mode (default, opposite of //B)
-        //Job:xxxx  Execute a WSF job
-        //Logo      Display logo (default)
-        //Nologo    Prevent logo display: No banner will be shown at execution time
-        //S         Save current command line options for this user
-        //T:nn      Time out in seconds:  Maximum time a script is permitted to run
-        //X         Execute script in debugger
-        //U         Use Unicode for redirected I/O from the console
+        /B          Batch mode: Suppresses script errors and prompts from displaying
+        /D          Enable Active Debugging
+        /E:engine   Use engine for executing script
+        /H:CScript  Changes the default script host to CScript.exe
+        /H:WScript  Changes the default script host to WScript.exe (default)
+        /I          Interactive mode (default, opposite of //B)
+        /Job:xxxx   Execute a WSF job
+        /Logo       Display logo (default)
+        /Nologo     Prevent logo display: No banner will be shown at execution time
+        /S          Save current command line options for this user
+        /T:nn       Time out in seconds:  Maximum time a script is permitted to run
+        /X          Execute script in debugger
+        /U          Use Unicode for redirected I/O from the console
       -->
       <Command>"C:\Windows\System32\cscript.exe" //Nologo //E:jscript "$(ProjectDir)source\scripts\minman.wsf" "%(FullPath)" "$(ProjectDir).build\AutoHotkey.exe.manifest"</Command>
       <Outputs>$(ProjectDir).build\AutoHotkey.exe.manifest</Outputs>

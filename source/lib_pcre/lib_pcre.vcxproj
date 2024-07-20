@@ -1,6 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0"
-  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectGuid>{39037993-9571-4DF2-8E39-CD2909043574}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -42,6 +41,9 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>pcre</ProjectName>
+  </PropertyGroup>
   <!-- import common config -->
   <Import Project="../../AutoHotkeyx.props" />
   <!-- platform: win32 -->
@@ -58,14 +60,13 @@
   <!-- paths and basic settings -->
   <PropertyGroup>
     <OutDir>$(ProjectDir)../../bin/$(Platform)/$(Configuration)/</OutDir>
-    <IntDir>$(ProjectDir)../../.build/$(MSBuildProjectName)/$(Platform)/$(Configuration)/</IntDir>
+    <IntDir>$(ProjectDir)../../.build/$(MSBuildProjectName)/$(Platform)_$(Architecture)/$(Configuration)/</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
       <CompileAs>CompileAsC</CompileAs>
       <PreprocessorDefinitions>HAVE_CONFIG_H;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ProgramDataBaseFileName Condition="'$(Configuration)|$(Platform)'=='Debug(mbcs)|x64'">$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
-      <ProgramDataBaseFileName Condition="'$(Configuration)|$(Platform)'=='Debug(mbcs)|Win32'">$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(IntDir)$(TargetName).pdb</ProgramDataBaseFileName>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)$(TargetFileName)</OutputFile>
