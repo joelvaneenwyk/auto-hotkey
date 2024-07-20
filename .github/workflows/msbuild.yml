@@ -14,20 +14,16 @@ on:
 env:
   # Path to the solution file relative to the root of the project.
   SOLUTION_FILE_PATH: AutoHotkeyx.sln
+  DEFAULT_CONFIG: Release
+  DEFAULT_PLATFORM: x64
 
 permissions:
   contents: read
 
 jobs:
   check:
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [x64]
-        config: [Release]
-        os: [windows]
-    runs-on: "${{ matrix.os }}-latest"
-    name: "Check // ${{ matrix.config }}"
+    runs-on: "windows-latest"
+    name: "Validate Build"
     steps:
       - uses: actions/checkout@v4
         with:
@@ -37,22 +33,26 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
         with:
-          msbuild-architecture: ${{ matrix.platform }}
+          msbuild-architecture: x64
 
       - name: Build
         working-directory: ${{ github.workspace }}
-        run: msbuild /m /p:Configuration="${{matrix.config}}" /p:Platform="${{matrix.platform}}" ${{env.SOLUTION_FILE_PATH}}
+        run: >-
+          msbuild
+          /m
+          /p:Configuration="${{env.DEFAULT_CONFIG}}"
+          /p:Platform="${{env.DEFAULT_PLATFORM}}"
+          "${{env.SOLUTION_FILE_PATH}}"
 
   build:
     needs: check
-    name: "Build // ${{ matrix.config }}"
+    name: "⚙️ Build // ${{ matrix.platform }} // ${{ matrix.config }}"
     runs-on: "${{ matrix.os }}-latest"
     strategy:
       fail-fast: false
       matrix:
         os: [windows]
         platform: [Win32, x64]
-        architecture: [x86, x64]
         config:
           - Debug
           - Debug.dll
@@ -70,4 +70,9 @@ jobs:
 
       - name: Build
         working-directory: ${{ github.workspace }}
-        run: msbuild /m /p:Configuration="${{matrix.config}}" /p:Platform="${{matrix.platform}}" ${{env.SOLUTION_FILE_PATH}}
+        run: >-
+          msbuild
+          /m
+          /p:Configuration="${{matrix.config}}"
+          /p:Platform="${{matrix.platform}}"
+          "${{env.SOLUTION_FILE_PATH}}"
