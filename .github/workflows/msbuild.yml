@@ -36,6 +36,8 @@ jobs:
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
+        with:
+          msbuild-architecture: ${{ matrix.platform }}
 
       - name: Build
         working-directory: ${{ github.workspace }}
@@ -50,6 +52,7 @@ jobs:
       matrix:
         os: [windows]
         platform: [Win32, x64]
+        architecture: [x86, x64]
         config:
           - Debug
           - Debug.dll
@@ -62,10 +65,8 @@ jobs:
 
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
-
-      - name: Restore NuGet packages
-        working-directory: ${{ github.workspace }}
-        run: nuget restore ${{ env.SOLUTION_FILE_PATH }}
+        with:
+          msbuild-architecture: ${{ matrix.platform }}
 
       - name: Build
         working-directory: ${{ github.workspace }}
