@@ -370,6 +370,7 @@ struct ExprTokenType  // Something in the compiler hates the name TokenType, so 
 
 
 	ExprTokenType() {}
+	ExprTokenType(const ExprTokenType& aValue) { CopyValueFrom(aValue); }
 	ExprTokenType(int aValue) { SetValue(aValue); }
 	ExprTokenType(__int64 aValue) { SetValue(aValue); }
 	ExprTokenType(double aValue) { SetValue(aValue); }
@@ -404,7 +405,7 @@ struct ExprTokenType  // Something in the compiler hates the name TokenType, so 
 		object = aValue;
 	}
 
-	inline void CopyValueFrom(ExprTokenType &other)
+	inline void CopyValueFrom(const ExprTokenType &other)
 	// Copies the value of a token (by reference where applicable).  Does not object->AddRef().
 	{
 		value_int64 = other.value_int64; // Union copy.

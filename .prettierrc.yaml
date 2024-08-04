@@ -1,0 +1,26 @@
+printWidth: 120
+tabWidth: 2
+useTabs: false
+semi: true
+singleQuote: true
+trailingComma: none
+bracketSpacing: true
+arrowParens: avoid
+overrides:
+  - files: '*.json'
+    options:
+      printWidth: 200
+      tabWidth: 2
+      useTabs: false
+      trailingComma: none
+  - files: '*.props'
+    options:
+      printWidth: 400
+      tabWidth: 4
+      useTabs: false
+  - files: '.clang-*'
+    options:
+      parser: 'yaml'
+      printWidth: 120
+      tabWidth: 2
+      useTabs: false

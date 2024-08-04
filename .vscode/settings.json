@@ -1,0 +1,30 @@
+{
+  "[json][jsonc]": {
+    "editor.defaultFormatter": "vscode.json-language-features",
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "always"
+    },
+    "editor.quickSuggestions": {
+      "strings": true
+    },
+    "editor.suggest.insertMode": "replace"
+  },
+  "json.format.enable": true,
+  "json.format.keepLines": false,
+  "editor.formatOnSaveMode": "modificationsIfAvailable",
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "editor.formatOnType": false,
+  "files.associations": {
+    ".clang-format": "yaml",
+    ".clang-tidy": "yaml",
+    "*.wsf": "javascript",
+    "ChangeLog": "plaintext",
+    "HACKING": "plaintext",
+    "INSTALL": "plaintext",
+    "NEWS": "plaintext",
+    "NON-UNIX-USE": "plaintext"
+  },
+  "xml.format.maxLineWidth": 300
+}
