@@ -344,19 +344,17 @@
     </ClCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CustomBuild Condition="'$(Platform)'!='x64'" Include="source\libx64call\x64call.asm">
+    <CustomBuild Include="source\libx64call\x64call.asm">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </CustomBuild>
-    <CustomBuild Condition="'$(Platform)'!='x64'" Include="source\libx64call\x64stub.asm">
+    <CustomBuild Include="source\libx64call\x64stub.asm">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>
     </CustomBuild>
-    <CustomBuild Condition="'$(Platform)'=='x64'" Include="source\x86call.asm">
+    <CustomBuild Include="source\x86call.asm">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
     </CustomBuild>
-  </ItemGroup>
-  <ItemGroup>
     <CustomBuild Include="source\resources\AutoHotkey.exe.manifest">
       <!--
        Usage: CScript scriptname.extension [option...] [arguments...]
@@ -379,8 +377,6 @@
       <Outputs>$(ProjectDir).build\AutoHotkey.exe.manifest</Outputs>
       <SubType>Designer</SubType>
     </CustomBuild>
-    <CustomBuild Include="source\libx64call\x64call.asm" />
-    <CustomBuild Include="source\libx64call\x64stub.asm" />
     <None Include="source\resources\icon_filetype.ico" />
     <None Include="source\resources\icon_main.ico" />
     <None Include="source\resources\icon_pause.ico" />
