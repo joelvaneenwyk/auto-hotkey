@@ -1,5 +1,5 @@
 {
-  "version": 8,
+  "version": 6,
   "configurePresets": [
     {
       "name": "x64-windows",
@@ -18,7 +18,7 @@
     {
       "name": "x64-windows-clang",
       "displayName": "VS2022 Clang x64",
-      "description": "Using compilers: C = C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\Llvm\\x64\\bin\\clang-cl.exe, CXX = C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\Llvm\\x64\\bin\\clang-cl.exe",
+      "description": "VS2022 build using clang-cl",
       "generator": "Visual Studio 17 2022",
       "toolset": "ClangCL,host=x64",
       "architecture": "x64",
@@ -33,37 +33,37 @@
   "buildPresets": [
     {
       "name": "x64-windows",
-      "displayName": "VS2022 x64 // Release",
+      "displayName": "VS2022 x64",
       "configurePreset": "x64-windows",
       "configuration": "RelWithDebInfo"
     },
     {
       "name": "x64-windows-debug",
-      "displayName": "VS2022 x64 // Debug",
+      "displayName": "VS2022 x64 Debug",
       "configurePreset": "x64-windows",
       "configuration": "Debug"
     },
     {
       "name": "x64-windows-release",
-      "displayName": "VS2022 x64",
+      "displayName": "VS2022 x64 Release",
       "configurePreset": "x64-windows",
       "configuration": "Release"
     },
     {
       "name": "x64-windows-clang",
-      "displayName": "Clang 17.0.3 (MSVC CLI) for MSVC 17.10.34928.147 (Visual Studio Community 2022 Release - amd64) - Debug",
+      "displayName": "Clang 17.0.3 (MSVC CLI) RelWithDebInfo",
       "configurePreset": "x64-windows-clang",
       "configuration": "RelWithDebInfo"
     },
     {
       "name": "x64-windows-clang-release",
-      "displayName": "Clang 17.0.3 (MSVC CLI) for MSVC 17.10.34928.147 (Visual Studio Community 2022 Release - amd64) - Debug",
+      "displayName": "Clang 17.0.3 (MSVC CLI) Release",
       "configurePreset": "x64-windows-clang",
       "configuration": "Debug"
     },
     {
       "name": "x64-windows-clang-debug",
-      "displayName": "Clang 17.0.3 (MSVC CLI) for MSVC 17.10.34928.147 (Visual Studio Community 2022 Release - amd64) - Debug",
+      "displayName": "Clang 17.0.3 (MSVC CLI) Debug",
       "configurePreset": "x64-windows-clang",
       "configuration": "Debug"
     }
