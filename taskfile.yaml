@@ -35,7 +35,7 @@ tasks:
           "
 
   build-all-configurations:
-    aliases: [check, lint, ci]
+    aliases: [all, check, lint, ci]
     silent: true
     cmds:
       - for: { var: CONFIGURATIONS }
