@@ -1,6 +1,8 @@
 #ifndef AHK_VERSION_H
 #define AHK_VERSION_H
 
+#include <winnt.h>
+
 #define AHK_NAME "AutoHotkey"
 #define T_AHK_NAME _T(AHK_NAME)
 
