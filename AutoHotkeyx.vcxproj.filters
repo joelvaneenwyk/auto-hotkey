@@ -327,13 +327,13 @@
     <CustomBuild Include="source\resources\AutoHotkey.exe.manifest">
       <Filter>Resource Files</Filter>
     </CustomBuild>
+    <CustomBuild Include="source\x86call.asm">
+      <Filter>Utility</Filter>
+    </CustomBuild>
     <CustomBuild Include="source\libx64call\x64call.asm">
       <Filter>Utility</Filter>
     </CustomBuild>
     <CustomBuild Include="source\libx64call\x64stub.asm">
-      <Filter>Utility</Filter>
-    </CustomBuild>
-    <CustomBuild Include="source\x86call.asm">
       <Filter>Utility</Filter>
     </CustomBuild>
   </ItemGroup>

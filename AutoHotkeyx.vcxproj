@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0"
-  xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <ProjectGuid>{76EFDEE3-81CF-4ADA-94DC-EA5509FF6FFC}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
@@ -347,9 +346,11 @@
   <ItemGroup>
     <CustomBuild Condition="'$(Platform)'!='x64'" Include="source\libx64call\x64call.asm">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
     </CustomBuild>
     <CustomBuild Condition="'$(Platform)'!='x64'" Include="source\libx64call\x64stub.asm">
       <ExcludedFromBuild Condition="'$(Platform)'!='x64'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
     </CustomBuild>
     <CustomBuild Condition="'$(Platform)'=='x64'" Include="source\x86call.asm">
       <ExcludedFromBuild Condition="'$(Platform)'=='x64'">true</ExcludedFromBuild>
