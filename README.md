@@ -1,8 +1,28 @@
 # AutoHotkey
 
+![AutoHotkey Logo with the three letters "A", "H", and "K"](docs/ahk_logo_no_text.svg)
+
 `AutoHotkey` is a free, open source macro-creation and automation software utility that allows users to automate repetitive tasks. It is driven by a custom scripting language that has special provision for defining keyboard shortcuts, otherwise known as hotkeys.
 
 > <https://www.autohotkey.com/>
+
+## Overview
+
+### Key Binds
+
+Define hotkeys for the mouse and keyboard, remap keys or buttons and autocorrect-like replacements. Creating simple hotkeys has never been easier; you can do it in just a few lines or less!
+
+### What is AutoHotkey?
+
+AutoHotkey is a free, open-source scripting language for Windows that allows users to easily create small to complex scripts for all kinds of tasks such as: form fillers, auto-clicking, macros, etc.
+
+### Is it good for me?
+
+AutoHotkey has easy to learn built-in commands for beginners. Experienced developers will love this full-fledged scripting language for fast prototyping and small projects.
+
+### Why AutoHotkey?
+
+AutoHotkey gives you the freedom to automate any desktop task. It's small, fast and runs out-of-the-box. Best of all, it's free, open-source (GNU GPLv2), and beginner-friendly. Why not give it a try?
 
 ## How to Compile
 
@@ -10,8 +30,8 @@
 
 1. Get the source code.
 2. Open `AutoHotkeyx.sln` in Visual Studio.
-3. Select the appropriate Build and Platform.
-4. Build.
+3. Select the appropriate `Build` and `Platform`.
+4. Run Build.
 
 The project is configured in a way that allows building with Visual Studio 2012 or later, but only the 2022 toolset is regularly tested. Some newer C++ language features are used and therefore a later version of the compiler might be required.
 
