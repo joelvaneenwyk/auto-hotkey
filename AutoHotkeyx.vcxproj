@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0"
   xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
@@ -378,6 +378,8 @@
       <Outputs>$(ProjectDir).build\AutoHotkey.exe.manifest</Outputs>
       <SubType>Designer</SubType>
     </CustomBuild>
+    <CustomBuild Include="source\libx64call\x64call.asm" />
+    <CustomBuild Include="source\libx64call\x64stub.asm" />
     <None Include="source\resources\icon_filetype.ico" />
     <None Include="source\resources\icon_main.ico" />
     <None Include="source\resources\icon_pause.ico" />
